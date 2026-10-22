@@ -1,0 +1,9 @@
+{
+    "name": "fast-wash/pbl",
+    "description": "Fast Wash - aplikasi manajemen laundry (proyek PBL). PHP prosedural + PostgreSQL via PDO.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0"
+    }
+}

@@ -13,10 +13,10 @@ $sudahLogin = isset($_SESSION['user_id']);
 <body class="bg-gray-50 text-gray-900">
     <header class="bg-sky-700 text-white">
         <div class="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-            <a href="<?php echo $base; ?>index" class="text-lg font-bold">Fast Wash</a>
+            <a href="<?php echo $base; ?>dashboard/index.php" class="text-lg font-bold">Fast Wash</a>
             <nav>
                 <ul class="flex gap-4 text-sm">
-                    <li><a class="hover:underline" href="<?php echo $base; ?>index">Beranda</a></li>
+                    <li><a class="hover:underline" href="<?php echo $base; ?>dashboard/index.php">Beranda</a></li>
                     <?php if ($sudahLogin): ?>
                     <li><a class="hover:underline" href="<?php echo $base; ?>pelanggan/list">Pelanggan</a></li>
                     <li><a class="hover:underline" href="<?php echo $base; ?>layanan/list">Layanan</a></li>
@@ -29,9 +29,9 @@ $sudahLogin = isset($_SESSION['user_id']);
             <div class="text-sm">
                 <?php if ($sudahLogin): ?>
                     <span class="mr-2"><?php echo e($_SESSION['nama'] ?? ''); ?></span>
-                    <a class="hover:underline" href="<?php echo $base; ?>auth/logout">Logout</a>
+                    <a class="hover:underline" href="<?php echo $base; ?>auth/logout.php">Logout</a>
                 <?php else: ?>
-                    <a class="hover:underline" href="<?php echo $base; ?>auth/login">Login</a>
+                    <a class="hover:underline" href="<?php echo $base; ?>auth/login.php">Login</a>
                 <?php endif; ?>
             </div>
         </div>
