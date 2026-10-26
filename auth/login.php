@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 
 // Sudah login -> langsung ke dashboard.
 if (isset($_SESSION['user_id'])) {
-    header('Location: ' . $base . 'dashboard/index.php');
+    header('Location: ' . $base . 'dashboard');
     exit;
 }
 

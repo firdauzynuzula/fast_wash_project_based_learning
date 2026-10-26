@@ -4,6 +4,6 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": ">=8.0"
+        "php": ">=8.2"
     }
 }
