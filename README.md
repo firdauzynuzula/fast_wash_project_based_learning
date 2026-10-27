@@ -13,14 +13,25 @@ transaksi/           tambah, proses_tambah, status, proses_status, riwayat
 auth/                login, register, logout (+ proses_*)
 includes/            bootstrap, config, koneksi, auth (guard), csrf, helpers, header, footer
 assets/              css (Tailwind hasil compile), js, img
-sql/                 skema PostgreSQL (jalankan berurutan 01 -> 03)
+sql/                 skema PostgreSQL lengkap (jalankan 00 -> 07 atau fast_wash_all_in_one.sql)
 docs/                catatan (security-checklist)
 tools/               tailwindcss.exe (CLI lokal, di-gitignore)
 ```
 
 ## Setup
 
-1. **Database**: buat database `fast_wash` di PostgreSQL, lalu jalankan `sql/01`, `02`, `03` berurutan.
+1. **Database**: 
+   - Buat database `fast_wash` di PostgreSQL (menggunakan [`sql/00_database.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/00_database.sql)).
+   - Jalankan skrip DDL & DML:
+     - **Opsi Cepat:** Jalankan satu file lengkap [`sql/fast_wash_all_in_one.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/fast_wash_all_in_one.sql) di DBeaver atau psql.
+     - **Opsi Bertahap:** Jalankan berurutan:
+       1. [`sql/01_master_dan_identitas.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/01_master_dan_identitas.sql) (Pelanggan, Pemilik, Karyawan, Layanan)
+       2. [`sql/02_pengguna_dan_autentikasi.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/02_pengguna_dan_autentikasi.sql) (Pengguna, Sesi Login, Reset Password)
+       3. [`sql/03_pesanan_dan_transaksi.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/03_pesanan_dan_transaksi.sql) (Pesanan, Detail Pesanan, Riwayat Status, Riwayat Transaksi)
+       4. [`sql/04_absensi_dan_log.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/04_absensi_dan_log.sql) (Absensi, Log Aktifitas)
+       5. [`sql/05_indeks_dan_trigger.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/05_indeks_dan_trigger.sql) (Indeks & Trigger Bisnis)
+       6. [`sql/06_views_antarmuka.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/06_views_antarmuka.sql) (View untuk Layar Dasbor, Pesanan, Nota, Laporan)
+       7. [`sql/07_data_awal_seed.sql`](file:///home/lucky-satria-utama/fast_wash_project_based_learning/sql/07_data_awal_seed.sql) (Data Awal Layanan, Akun Demo, Sample Transaksi)
 2. **Kredensial**: salin/edit file `.env` di root (otomatis dimuat `includes/bootstrap.php`). Jangan commit `.env` — sudah di-gitignore.
 3. **Web server**: Apache (XAMPP/Laragon) dengan `mod_rewrite` aktif dan `AllowOverride All` untuk folder project — wajib agar `.htaccess` (URL tanpa `.php`) bekerja. Laragon: sudah default. XAMPP: edit `httpd.conf`.
 4. **Tailwind** (hanya jika mengubah CSS): compile ulang dengan
