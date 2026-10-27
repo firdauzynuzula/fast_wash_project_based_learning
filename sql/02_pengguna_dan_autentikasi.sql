@@ -7,7 +7,7 @@
 -- 1. TABEL PENGGUNA
 -- Relasi 1-to-1 opsional dengan pelanggan, karyawan, atau pemilik
 CREATE TABLE IF NOT EXISTS pengguna (
-    id_pengguna             INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pengguna             SERIAL PRIMARY KEY,
     id_pelanggan            INTEGER UNIQUE REFERENCES pelanggan (id_pelanggan) ON DELETE SET NULL,
     id_pemilik              INTEGER UNIQUE REFERENCES pemilik (id_pemilik) ON DELETE SET NULL,
     id_karyawan             INTEGER UNIQUE REFERENCES karyawan (id_karyawan) ON DELETE SET NULL,
@@ -32,7 +32,7 @@ COMMENT ON CONSTRAINT chk_pengguna_identitas ON pengguna IS 'Menjamin tepat 1 re
 
 -- 2. TABEL SESI LOGIN
 CREATE TABLE IF NOT EXISTS sesi_login (
-    id_sesion           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_sesion           SERIAL PRIMARY KEY,
     id_pengguna         INTEGER      NOT NULL REFERENCES pengguna (id_pengguna) ON DELETE CASCADE,
     token_hash          VARCHAR(255) NOT NULL,
     waktu_login         TIMESTAMP    NOT NULL DEFAULT NOW(),
@@ -46,7 +46,7 @@ COMMENT ON TABLE sesi_login IS 'Pencatatan sesi aktif login dan opsi remember me
 
 -- 3. TABEL RESET PASSWORD
 CREATE TABLE IF NOT EXISTS reset_password (
-    id_reset_password   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_reset_password   SERIAL PRIMARY KEY,
     id_pengguna         INTEGER      NOT NULL REFERENCES pengguna (id_pengguna) ON DELETE CASCADE,
     token_hash          VARCHAR(255) NOT NULL,
     waktu_dibuat        TIMESTAMP    NOT NULL DEFAULT NOW(),

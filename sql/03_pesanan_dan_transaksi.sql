@@ -6,7 +6,7 @@
 
 -- 1. TABEL PESANAN INDUK
 CREATE TABLE IF NOT EXISTS pesanan (
-    id_pesanan          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pesanan          SERIAL PRIMARY KEY,
     id_pelanggan        INTEGER       NOT NULL REFERENCES pelanggan (id_pelanggan),
     id_karyawan         INTEGER       NOT NULL REFERENCES karyawan (id_karyawan),
     kode_pesanan        VARCHAR(30)   NOT NULL UNIQUE,
@@ -31,7 +31,7 @@ COMMENT ON COLUMN pesanan.biaya_tambahan IS 'Biaya ekstra seperti Layanan Cepat 
 
 -- 2. TABEL DETAIL PESANAN
 CREATE TABLE IF NOT EXISTS detail_pesanan (
-    id_detail_pesanan   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_detail_pesanan   SERIAL PRIMARY KEY,
     id_pesanan          INTEGER       NOT NULL REFERENCES pesanan (id_pesanan) ON DELETE CASCADE,
     id_layanan          INTEGER       NOT NULL REFERENCES layanan (id_layanan),
     qty                 NUMERIC(6,2)  NOT NULL CHECK (qty > 0),
@@ -44,7 +44,7 @@ COMMENT ON TABLE detail_pesanan IS 'Rincian item layanan dalam satu pesanan (men
 
 -- 3. TABEL RIWAYAT STATUS PESANAN
 CREATE TABLE IF NOT EXISTS riwayat_status_pesanan (
-    id_riwayat_status_pesanan INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_riwayat_status_pesanan SERIAL PRIMARY KEY,
     id_pesanan          INTEGER     NOT NULL REFERENCES pesanan (id_pesanan) ON DELETE CASCADE,
     id_karyawan         INTEGER     NOT NULL REFERENCES karyawan (id_karyawan),
     status              VARCHAR(30) NOT NULL,
@@ -57,7 +57,7 @@ COMMENT ON TABLE riwayat_status_pesanan IS 'Log perubahan tahapan pengerjaan cuc
 
 -- 4. TABEL RIWAYAT TRANSAKSI (APPEND-ONLY)
 CREATE TABLE IF NOT EXISTS riwayat_transaksi (
-    id_transaksi        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_transaksi        SERIAL PRIMARY KEY,
     id_karyawan         INTEGER       REFERENCES karyawan (id_karyawan),
     id_pesanan          INTEGER       NOT NULL REFERENCES pesanan (id_pesanan),
     tanggal_bayar       TIMESTAMP     NOT NULL DEFAULT NOW(),

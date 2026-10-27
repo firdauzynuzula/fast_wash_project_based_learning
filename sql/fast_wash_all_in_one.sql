@@ -7,7 +7,7 @@
 -- 1. TABEL PELANGGAN
 -- Menyimpan data profil pelanggan laundry
 CREATE TABLE IF NOT EXISTS pelanggan (
-    id_pelanggan    INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pelanggan    SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
     alamat          VARCHAR(255),
@@ -23,7 +23,7 @@ COMMENT ON COLUMN pelanggan.tanggal_daftar IS 'Waktu registrasi pertama kali';
 -- 2. TABEL PEMILIK
 -- Data profil pemilik usaha (Owner)
 CREATE TABLE IF NOT EXISTS pemilik (
-    id_pemilik      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pemilik      SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL,
     email           VARCHAR(100)
@@ -34,7 +34,7 @@ COMMENT ON TABLE pemilik IS 'Profil data pemilik usaha laundry (Owner)';
 -- 3. TABEL KARYAWAN
 -- Data profil karyawan operasional & kasir
 CREATE TABLE IF NOT EXISTS karyawan (
-    id_karyawan     INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_karyawan     SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
     alamat          VARCHAR(255),
@@ -47,7 +47,7 @@ COMMENT ON COLUMN karyawan.status_aktif IS 'Status keaktifan bekerja (true = akt
 -- 4. TABEL LAYANAN
 -- Katalog jenis layanan laundry, tarif per satuan, dan durasi estimasi
 CREATE TABLE IF NOT EXISTS layanan (
-    id_layanan      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_layanan      SERIAL PRIMARY KEY,
     nama_layanan    VARCHAR(100)  NOT NULL,
     harga           NUMERIC(12,2) NOT NULL CHECK (harga >= 0),
     satuan          VARCHAR(30)   NOT NULL DEFAULT 'kg',
@@ -66,7 +66,7 @@ COMMENT ON COLUMN layanan.durasi_jam IS 'Estimasi standar pengerjaan dalam satua
 -- 1. TABEL PENGGUNA
 -- Relasi 1-to-1 opsional dengan pelanggan, karyawan, atau pemilik
 CREATE TABLE IF NOT EXISTS pengguna (
-    id_pengguna             INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pengguna             SERIAL PRIMARY KEY,
     id_pelanggan            INTEGER UNIQUE REFERENCES pelanggan (id_pelanggan) ON DELETE SET NULL,
     id_pemilik              INTEGER UNIQUE REFERENCES pemilik (id_pemilik) ON DELETE SET NULL,
     id_karyawan             INTEGER UNIQUE REFERENCES karyawan (id_karyawan) ON DELETE SET NULL,
@@ -91,7 +91,7 @@ COMMENT ON CONSTRAINT chk_pengguna_identitas ON pengguna IS 'Menjamin tepat 1 re
 
 -- 2. TABEL SESI LOGIN
 CREATE TABLE IF NOT EXISTS sesi_login (
-    id_sesion           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_sesion           SERIAL PRIMARY KEY,
     id_pengguna         INTEGER      NOT NULL REFERENCES pengguna (id_pengguna) ON DELETE CASCADE,
     token_hash          VARCHAR(255) NOT NULL,
     waktu_login         TIMESTAMP    NOT NULL DEFAULT NOW(),
@@ -105,7 +105,7 @@ COMMENT ON TABLE sesi_login IS 'Pencatatan sesi aktif login dan opsi remember me
 
 -- 3. TABEL RESET PASSWORD
 CREATE TABLE IF NOT EXISTS reset_password (
-    id_reset_password   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_reset_password   SERIAL PRIMARY KEY,
     id_pengguna         INTEGER      NOT NULL REFERENCES pengguna (id_pengguna) ON DELETE CASCADE,
     token_hash          VARCHAR(255) NOT NULL,
     waktu_dibuat        TIMESTAMP    NOT NULL DEFAULT NOW(),
@@ -123,7 +123,7 @@ COMMENT ON TABLE reset_password IS 'Token verifikasi saat pengguna meminta reset
 
 -- 1. TABEL PESANAN INDUK
 CREATE TABLE IF NOT EXISTS pesanan (
-    id_pesanan          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pesanan          SERIAL PRIMARY KEY,
     id_pelanggan        INTEGER       NOT NULL REFERENCES pelanggan (id_pelanggan),
     id_karyawan         INTEGER       NOT NULL REFERENCES karyawan (id_karyawan),
     kode_pesanan        VARCHAR(30)   NOT NULL UNIQUE,
@@ -148,7 +148,7 @@ COMMENT ON COLUMN pesanan.biaya_tambahan IS 'Biaya ekstra seperti Layanan Cepat 
 
 -- 2. TABEL DETAIL PESANAN
 CREATE TABLE IF NOT EXISTS detail_pesanan (
-    id_detail_pesanan   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_detail_pesanan   SERIAL PRIMARY KEY,
     id_pesanan          INTEGER       NOT NULL REFERENCES pesanan (id_pesanan) ON DELETE CASCADE,
     id_layanan          INTEGER       NOT NULL REFERENCES layanan (id_layanan),
     qty                 NUMERIC(6,2)  NOT NULL CHECK (qty > 0),
@@ -161,7 +161,7 @@ COMMENT ON TABLE detail_pesanan IS 'Rincian item layanan dalam satu pesanan (men
 
 -- 3. TABEL RIWAYAT STATUS PESANAN
 CREATE TABLE IF NOT EXISTS riwayat_status_pesanan (
-    id_riwayat_status_pesanan INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_riwayat_status_pesanan SERIAL PRIMARY KEY,
     id_pesanan          INTEGER     NOT NULL REFERENCES pesanan (id_pesanan) ON DELETE CASCADE,
     id_karyawan         INTEGER     NOT NULL REFERENCES karyawan (id_karyawan),
     status              VARCHAR(30) NOT NULL,
@@ -174,7 +174,7 @@ COMMENT ON TABLE riwayat_status_pesanan IS 'Log perubahan tahapan pengerjaan cuc
 
 -- 4. TABEL RIWAYAT TRANSAKSI (APPEND-ONLY)
 CREATE TABLE IF NOT EXISTS riwayat_transaksi (
-    id_transaksi        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_transaksi        SERIAL PRIMARY KEY,
     id_karyawan         INTEGER       REFERENCES karyawan (id_karyawan),
     id_pesanan          INTEGER       NOT NULL REFERENCES pesanan (id_pesanan),
     tanggal_bayar       TIMESTAMP     NOT NULL DEFAULT NOW(),
@@ -197,7 +197,7 @@ COMMENT ON COLUMN riwayat_transaksi.status_transaksi IS 'valid = sah/tercatat ka
 
 -- 1. TABEL ABSENSI KARYAWAN
 CREATE TABLE IF NOT EXISTS absensi (
-    id_absensi      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_absensi      SERIAL PRIMARY KEY,
     id_karyawan     INTEGER     NOT NULL REFERENCES karyawan (id_karyawan),
     tanggal         DATE        NOT NULL DEFAULT CURRENT_DATE,
     jam_masuk       TIMESTAMP   NOT NULL DEFAULT NOW(),
@@ -213,7 +213,7 @@ COMMENT ON TABLE absensi IS 'Rekapitulasi kehadiran harian karyawan (check-in / 
 
 -- 2. TABEL LOG AKTIFITAS
 CREATE TABLE IF NOT EXISTS log_aktifitas (
-    id_log          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_log          SERIAL PRIMARY KEY,
     id_pengguna     INTEGER      NOT NULL REFERENCES pengguna (id_pengguna),
     id_pesanan      INTEGER      REFERENCES pesanan (id_pesanan),
     waktu           TIMESTAMP    NOT NULL DEFAULT NOW(),

@@ -7,7 +7,7 @@
 -- 1. TABEL PELANGGAN
 -- Menyimpan data profil pelanggan laundry
 CREATE TABLE IF NOT EXISTS pelanggan (
-    id_pelanggan    INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pelanggan    SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
     alamat          VARCHAR(255),
@@ -23,7 +23,7 @@ COMMENT ON COLUMN pelanggan.tanggal_daftar IS 'Waktu registrasi pertama kali';
 -- 2. TABEL PEMILIK
 -- Data profil pemilik usaha (Owner)
 CREATE TABLE IF NOT EXISTS pemilik (
-    id_pemilik      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pemilik      SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL,
     email           VARCHAR(100)
@@ -34,7 +34,7 @@ COMMENT ON TABLE pemilik IS 'Profil data pemilik usaha laundry (Owner)';
 -- 3. TABEL KARYAWAN
 -- Data profil karyawan operasional & kasir
 CREATE TABLE IF NOT EXISTS karyawan (
-    id_karyawan     INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_karyawan     SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
     alamat          VARCHAR(255),
@@ -47,7 +47,7 @@ COMMENT ON COLUMN karyawan.status_aktif IS 'Status keaktifan bekerja (true = akt
 -- 4. TABEL LAYANAN
 -- Katalog jenis layanan laundry, tarif per satuan, dan durasi estimasi
 CREATE TABLE IF NOT EXISTS layanan (
-    id_layanan      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_layanan      SERIAL PRIMARY KEY,
     nama_layanan    VARCHAR(100)  NOT NULL,
     harga           NUMERIC(12,2) NOT NULL CHECK (harga >= 0),
     satuan          VARCHAR(30)   NOT NULL DEFAULT 'kg',

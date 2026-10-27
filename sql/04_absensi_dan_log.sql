@@ -5,7 +5,7 @@
 
 -- 1. TABEL ABSENSI KARYAWAN
 CREATE TABLE IF NOT EXISTS absensi (
-    id_absensi      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_absensi      SERIAL PRIMARY KEY,
     id_karyawan     INTEGER     NOT NULL REFERENCES karyawan (id_karyawan),
     tanggal         DATE        NOT NULL DEFAULT CURRENT_DATE,
     jam_masuk       TIMESTAMP   NOT NULL DEFAULT NOW(),
@@ -21,7 +21,7 @@ COMMENT ON TABLE absensi IS 'Rekapitulasi kehadiran harian karyawan (check-in / 
 
 -- 2. TABEL LOG AKTIFITAS
 CREATE TABLE IF NOT EXISTS log_aktifitas (
-    id_log          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_log          SERIAL PRIMARY KEY,
     id_pengguna     INTEGER      NOT NULL REFERENCES pengguna (id_pengguna),
     id_pesanan      INTEGER      REFERENCES pesanan (id_pesanan),
     waktu           TIMESTAMP    NOT NULL DEFAULT NOW(),
