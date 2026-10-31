@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastwash_app_staging
+    restart: always
+    ports:
+      - "127.0.0.1:8082:80"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=fast_wash_staging
+      - DB_USER=postgres
+      - DB_PASS=staging_secret_pass
+      - DB_SSLMODE=disable
+      - APP_DEBUG=true
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: fastwash_db_staging
+    restart: always
+    environment:
+      POSTGRES_DB: fast_wash_staging
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: staging_secret_pass
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+      - ./sql/01_master_dan_identitas.sql:/docker-entrypoint-initdb.d/01_master_dan_identitas.sql
+      - ./sql/02_pengguna_dan_autentikasi.sql:/docker-entrypoint-initdb.d/02_pengguna_dan_autentikasi.sql
+      - ./sql/03_pesanan_dan_transaksi.sql:/docker-entrypoint-initdb.d/03_pesanan_dan_transaksi.sql
+      - ./sql/04_absensi_dan_log.sql:/docker-entrypoint-initdb.d/04_absensi_dan_log.sql
+      - ./sql/05_indeks_dan_trigger.sql:/docker-entrypoint-initdb.d/05_indeks_dan_trigger.sql
+      - ./sql/06_views_antarmuka.sql:/docker-entrypoint-initdb.d/06_views_antarmuka.sql
+      - ./sql/07_data_awal_seed.sql:/docker-entrypoint-initdb.d/07_data_awal_seed.sql
+
+volumes:
+  pgdata_staging:

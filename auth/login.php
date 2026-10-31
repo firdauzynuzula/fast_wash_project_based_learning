@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <h1 class="mt-8 text-4xl font-extrabold text-[#16305b]">Handled with care</h1>
             <p class="mt-4 text-[#5b6b82] leading-relaxed">Mulai dari penjemputan di depan pintu hingga pengiriman dengan pakaian terlipat rapi.</p>
-            <img src="<?php echo $base; ?>assets/img/laundry-illustration.png" alt="Ilustrasi mesin cuci, keranjang laundry, dan tumpukan handuk" class="mt-auto pt-8 w-full max-w-sm mx-auto">
+            <img src="<?php echo $base; ?>assets/img/laundry-illustration.webp" alt="Ilustrasi mesin cuci, keranjang laundry, dan tumpukan handuk" class="mt-auto pt-8 w-full max-w-sm mx-auto">
         </section>
 
         <!-- Panel kanan: form masuk -->

@@ -1,3 +1,4 @@
+-- Active: 1791336200846@@127.0.0.1@5432@fast_wash
 -- =====================================================================
 -- FAST WASH - 01_MASTER_DAN_IDENTITAS.SQL
 -- Entitas Master: Pelanggan, Pemilik, Karyawan, Layanan
