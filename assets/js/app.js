@@ -1,4 +1,4 @@
-// Fast Wash — interaksi halaman masuk.
+// Fast Wash — interaksi halaman masuk & daftar.
 
 // Toggle peran (Pemilik / Karyawan): pindahkan pill aktif + isi input hidden.
 const roleButtons = document.querySelectorAll(".js-role");
@@ -19,17 +19,22 @@ roleButtons.forEach((btn) => {
 });
 
 // Tampilkan/sembunyikan kata sandi — ikon mata berganti sesuai status.
-const pwd = document.getElementById("password");
-const pwdToggle = document.getElementById("toggle-password");
-const iconEye = document.getElementById("icon-eye");
-const iconEyeOff = document.getElementById("icon-eye-off");
+function initPasswordToggle(inputId, toggleId, eyeId, eyeOffId) {
+    const pwd = document.getElementById(inputId);
+    const pwdToggle = document.getElementById(toggleId);
+    const iconEye = document.getElementById(eyeId);
+    const iconEyeOff = document.getElementById(eyeOffId);
 
-if (pwd && pwdToggle && iconEye && iconEyeOff) {
-    pwdToggle.addEventListener("click", () => {
-        const show = pwd.type === "password";
-        pwd.type = show ? "text" : "password";
-        iconEye.classList.toggle("hidden", show);
-        iconEyeOff.classList.toggle("hidden", !show);
-        pwdToggle.setAttribute("aria-label", show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi");
-    });
+    if (pwd && pwdToggle && iconEye && iconEyeOff) {
+        pwdToggle.addEventListener("click", () => {
+            const show = pwd.type === "password";
+            pwd.type = show ? "text" : "password";
+            iconEye.classList.toggle("hidden", show);
+            iconEyeOff.classList.toggle("hidden", !show);
+            pwdToggle.setAttribute("aria-label", show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi");
+        });
+    }
 }
+
+initPasswordToggle("password", "toggle-password", "icon-eye", "icon-eye-off");
+initPasswordToggle("password_confirm", "toggle-password-confirm", "icon-eye-confirm", "icon-eye-off-confirm");

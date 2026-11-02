@@ -15,6 +15,7 @@ services:
       - DB_PASS=staging_secret_pass
       - DB_SSLMODE=disable
       - APP_DEBUG=true
+      - NOTA_BASE_URL=https://staging-nota.fastwash.my.id
     depends_on:
       - db
 

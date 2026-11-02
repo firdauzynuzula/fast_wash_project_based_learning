@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
             <p class="mt-6 text-center text-sm text-[#6b7a90]">
-                Pelanggan baru? <a href="#" class="font-semibold text-[#1668dc] hover:underline">Buat akun</a>
+                Pelanggan baru? <a href="<?php echo $base; ?>auth/register" class="font-semibold text-[#1668dc] hover:underline">Buat akun</a>
             </p>
         </section>
     </div>

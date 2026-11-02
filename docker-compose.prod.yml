@@ -15,6 +15,7 @@ services:
       - DB_PASS=prod_ultra_secure_pass
       - DB_SSLMODE=disable
       - APP_DEBUG=false
+      - NOTA_BASE_URL=https://nota.fastwash.my.id
     depends_on:
       - db
 
