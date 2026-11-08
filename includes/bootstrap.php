@@ -28,4 +28,41 @@ require_once __DIR__ . '/csrf.php';
 // Halaman yang tidak butuh database (login default, dashboard) set $tanpaDb = true sebelum require bootstrap.
 if (empty($tanpaDb)) {
     require_once __DIR__ . '/koneksi.php';   // menghasilkan $pdo
+
+    // Fitur "Ingat Saya" (Remember Me): auto-login jika cookie valid
+    if (!isset($_SESSION['user_id']) && !empty($_COOKIE['remember_token']) && isset($pdo)) {
+        $parts = explode(':', $_COOKIE['remember_token'], 2);
+        if (count($parts) === 2) {
+            [$userId, $token] = $parts;
+            $tokenHash = hash('sha256', $token);
+
+            try {
+                $stmtSesi = $pdo->prepare('
+                    SELECT s.id_pengguna, u.nama, u.role, u.email, u.is_active
+                    FROM sesi_login s
+                    JOIN v_login_identitas u ON u.id_pengguna = s.id_pengguna
+                    WHERE s.id_pengguna = ?
+                      AND s.token_hash = ?
+                      AND s.waktu_kadaluarsa > NOW()
+                      AND s.waktu_logout IS NULL
+                      AND s.ingat_saya = true
+                    LIMIT 1
+                ');
+                $stmtSesi->execute([(int)$userId, $tokenHash]);
+                $userSesi = $stmtSesi->fetch();
+
+                if ($userSesi && $userSesi['is_active']) {
+                    $_SESSION['user_id'] = $userSesi['id_pengguna'];
+                    $_SESSION['nama']    = $userSesi['nama'];
+                    $_SESSION['role']    = $userSesi['role'];
+                    $_SESSION['email']   = $userSesi['email'];
+                } else {
+                    setcookie('remember_token', '', time() - 3600, '/');
+                }
+            } catch (Exception $e) {
+                // Jangan gagalkan bootstrap jika ada kendala pembacaan cookie
+                setcookie('remember_token', '', time() - 3600, '/');
+            }
+        }
+    }
 }

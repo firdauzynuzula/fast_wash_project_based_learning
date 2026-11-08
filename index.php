@@ -16,6 +16,7 @@ $routes = [
     'auth/proses_login'     => 'auth/proses_login.php',
     'auth/register'         => 'auth/register.php',
     'auth/proses_register'  => 'auth/proses_register.php',
+    'auth/lupa_password'    => 'auth/lupa_password.php',
     'auth/logout'           => 'auth/logout.php',
 
     'pelanggan/list'          => 'pelanggan/list.php',

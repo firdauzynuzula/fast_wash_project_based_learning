@@ -1,35 +1,96 @@
 <?php
-$tanpaDb = true;
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/auth_default.php';
 
-// Sudah login -> langsung ke dashboard.
+// Jika sudah login -> langsung redirect ke dashboard
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . $base . 'dashboard');
     exit;
 }
 
-// Pesan error satu kali tampil (diset oleh auth/proses_login).
-$error = $_SESSION['flash_error'] ?? '';
-unset($_SESSION['flash_error']);
+// Ambil pesan notifikasi dari session
+$error   = $_SESSION['flash_error'] ?? '';
+$success = $_SESSION['flash_success'] ?? '';
+unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
-// Proses form login jika metode POST
+$oldUsername = '';
+
+// Proses form login saat metode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../includes/auth_default.php';
     csrf_check();
 
     $username = trim($_POST['username'] ?? '');
     $password = (string) ($_POST['password'] ?? '');
+    $ingat    = isset($_POST['ingat']);
+    $oldUsername = $username;
 
-    if (cek_login_default($username, $password)) {
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = 1;
-        $_SESSION['nama']    = 'Admin';
-        $_SESSION['role']    = 'admin';
-        header('Location: ' . $base . 'dashboard');
-        exit;
+    if ($username === '' || $password === '') {
+        $error = 'Email/Nomor HP dan kata sandi wajib diisi.';
+    } else {
+        $user = null;
+
+        // 1. Cek kredensial ke database PostgreSQL (View v_login_identitas)
+        if (isset($pdo)) {
+            try {
+                $stmt = $pdo->prepare('
+                    SELECT id_pengguna, email, no_telepon, password_hash, role, is_active, nama 
+                    FROM v_login_identitas 
+                    WHERE email = ? OR no_telepon = ? 
+                    LIMIT 1
+                ');
+                $stmt->execute([$username, $username]);
+                $user = $stmt->fetch();
+            } catch (Exception $e) {
+                // Fallback jika query bermasalah
+                $user = null;
+            }
+        }
+
+        // 2. Verifikasi kata sandi
+        if ($user && password_verify($password, $user['password_hash'])) {
+            if (!$user['is_active']) {
+                $error = 'Akun Anda sedang dinonaktifkan. Silakan hubungi admin.';
+            } else {
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = $user['id_pengguna'];
+                $_SESSION['nama']    = $user['nama'];
+                $_SESSION['role']    = $user['role'];
+                $_SESSION['email']   = $user['email'];
+
+                // 3. Tangani opsi "Ingat Saya" (Remember Me)
+                if ($ingat && isset($pdo)) {
+                    try {
+                        $token     = bin2hex(random_bytes(32));
+                        $tokenHash = hash('sha256', $token);
+
+                        $stmtSesi = $pdo->prepare('
+                            INSERT INTO sesi_login (id_pengguna, token_hash, waktu_kadaluarsa, ingat_saya) 
+                            VALUES (?, ?, NOW() + INTERVAL \'30 days\', true)
+                        ');
+                        $stmtSesi->execute([$user['id_pengguna'], $tokenHash]);
+
+                        // Simpan cookie selama 30 hari
+                        setcookie('remember_token', $user['id_pengguna'] . ':' . $token, time() + (86400 * 30), '/', '', false, true);
+                    } catch (Exception $e) {
+                        // Jangan gagalkan login jika pembuatan token sesi gagal
+                    }
+                }
+
+                header('Location: ' . $base . 'dashboard');
+                exit;
+            }
+        } elseif (cek_login_default($username, $password)) {
+            // Akun admin bawaan (fallback tanpa database)
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = 1;
+            $_SESSION['nama']    = 'Admin';
+            $_SESSION['role']    = 'admin';
+            header('Location: ' . $base . 'dashboard');
+            exit;
+        } else {
+            $error = 'Email/Nomor HP atau kata sandi salah.';
+        }
     }
-
-    $error = 'Username atau kata sandi salah.';
 }
 ?>
 <!DOCTYPE html>
@@ -75,8 +136,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         class="js-role cursor-pointer py-2 text-center rounded-full bg-white text-[#1668dc] shadow-sm">Karyawan</button>
             </div>
 
+            <?php if (!empty($success)): ?>
+            <p role="status" class="mt-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm font-medium text-green-700"><?php echo e($success); ?></p>
+            <?php endif; ?>
+
             <?php if (!empty($error)): ?>
-            <p role="alert" class="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><?php echo e($error); ?></p>
+            <p role="alert" class="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm font-medium text-red-700"><?php echo e($error); ?></p>
             <?php endif; ?>
 
             <form action="" method="post" class="mt-6 space-y-5">
@@ -92,7 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </svg>
                         </div>
                         <input id="email" name="username" type="text" autocomplete="username" required
-                               placeholder="fastwash@gmail.com"
+                               value="<?php echo e($oldUsername); ?>"
+                               placeholder="fastwash@gmail.com atau 081234567800"
                                class="block w-full ps-10 pe-3.5 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-blue-700 focus:border-blue-700 shadow-xs placeholder:text-gray-500">
                     </div>
                 </div>
@@ -122,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                class="w-4 h-4 border border-gray-200 rounded bg-gray-50 accent-blue-700 focus:ring-2 focus:ring-blue-100">
                         <label for="ingat" class="ms-2 text-sm font-medium text-gray-900 select-none">Ingat saya</label>
                     </div>
-                    <a href="#" class="font-semibold text-[#1668dc] hover:underline">Lupa kata sandi?</a>
+                    <a href="<?php echo $base; ?>auth/lupa_password" class="font-semibold text-[#1668dc] hover:underline">Lupa kata sandi?</a>
                 </div>
 
                 <button type="submit"
