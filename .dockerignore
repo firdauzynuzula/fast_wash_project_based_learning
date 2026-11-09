@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.*
+.agents
+node_modules
+tools
+docs
+*.log
+docker-compose*.yml
+Jenkinsfile
+README.md
+.html

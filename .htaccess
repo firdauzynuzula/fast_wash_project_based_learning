@@ -1,0 +1,18 @@
+DirectoryIndex index.php
+Options -Indexes -MultiViews
+
+RewriteEngine On
+
+# 301: akses langsung .php -> URL bersih.
+# THE_REQUEST = request asli client, tidak berubah saat rewrite internal -> anti-loop.
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 301: trailing slash -> URL kanonik tanpa slash (folder asli diloloskan !-d).
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+?)/+$ $1 [R=301,L]
+
+# Front controller: semua URL yang bukan file asli -> index.php (router).
+# File asli (css/js/png) lolos via !-f. Daftar URL ada di $routes pada index.php.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]
