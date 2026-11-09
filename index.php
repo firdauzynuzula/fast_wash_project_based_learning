@@ -12,11 +12,14 @@ $routes = [
     'dashboard'             => 'dashboard/index.php',
     'dashboard/index'       => 'dashboard/index.php',
 
-    'auth/login'            => 'auth/login.php',
-    'auth/proses_login'     => 'auth/proses_login.php',
-    'auth/register'         => 'auth/register.php',
-    'auth/proses_register'  => 'auth/proses_register.php',
-    'auth/logout'           => 'auth/logout.php',
+    'auth/login'                 => 'auth/login.php',
+    'auth/proses_login'          => 'auth/proses_login.php',
+    'auth/forgot_password'       => 'auth/forgot_password.php',
+    'auth/reset_password'        => 'auth/reset_password.php',
+    'auth/proses_reset_password' => 'auth/proses_reset_password.php',
+    'auth/register'              => 'auth/register.php',
+    'auth/proses_register'       => 'auth/proses_register.php',
+    'auth/logout'                => 'auth/logout.php',
 
     'pelanggan/list'          => 'pelanggan/list.php',
     'pelanggan/tambah'        => 'pelanggan/tambah.php',
@@ -25,18 +28,23 @@ $routes = [
     'pelanggan/proses_edit'   => 'pelanggan/proses_edit.php',
     'pelanggan/hapus'         => 'pelanggan/hapus.php',
 
-    'layanan/list'          => 'layanan/list.php',
-    'layanan/tambah'        => 'layanan/tambah.php',
-    'layanan/proses_tambah' => 'layanan/proses_tambah.php',
-    'layanan/edit'          => 'layanan/edit.php',
-    'layanan/proses_edit'   => 'layanan/proses_edit.php',
-    'layanan/hapus'         => 'layanan/hapus.php',
-
     'transaksi/tambah'        => 'transaksi/tambah.php',
     'transaksi/proses_tambah' => 'transaksi/proses_tambah.php',
     'transaksi/status'        => 'transaksi/status.php',
     'transaksi/proses_status' => 'transaksi/proses_status.php',
     'transaksi/riwayat'       => 'transaksi/riwayat.php',
+
+    'pembayaran'              => 'pembayaran/index.php',
+    'pembayaran/index'        => 'pembayaran/index.php',
+    'pembayaran/riwayat'      => 'pembayaran/riwayat.php',
+
+    'absensi'                 => 'absensi/index.php',
+    'absensi/index'           => 'absensi/index.php',
+
+    'log-activity'            => 'log-activity/index.php',
+    'log-activity/index'      => 'log-activity/index.php',
+
+    'nota'                    => 'pelanggan/pesanan.php',
 ];
 
 // Path URL relatif terhadap folder aplikasi (mendukung install di subfolder),

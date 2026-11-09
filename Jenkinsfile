@@ -25,7 +25,7 @@ pipeline {
                 echo "Branch staging terdeteksi! Melakukan deployment ke environment Staging..."
                 sh '''
                     docker compose -f docker-compose.staging.yml -p fastwash-staging down
-                    docker compose -f docker-compose.staging.yml -p fastwash-staging up -d --build
+                    docker compose -f docker-compose.staging.yml -p fastwash-staging up -d --build --pull always
                 '''
             }
         }
@@ -36,12 +36,12 @@ pipeline {
             }
             steps {
                 // Menunggu persetujuan / konfirmasi manual dari user di UI Jenkins
-                input message: 'Apakah Anda yakin ingin mendeploy ke server PRODUCTION (fastwash.my.id)?', ok: 'Ya, Deploy ke Production'
+                input message: 'Apakah Anda yakin ingin mendeploy ke server PRODUCTION (fastwash.my.id & nota.fastwash.my.id)?', ok: 'Ya, Deploy ke Production'
 
                 echo "Approval diterima! Melakukan deployment ke environment Production..."
                 sh '''
                     docker compose -f docker-compose.prod.yml -p fastwash-prod down
-                    docker compose -f docker-compose.prod.yml -p fastwash-prod up -d --build
+                    docker compose -f docker-compose.prod.yml -p fastwash-prod up -d --build --pull always
                 '''
             }
         }
@@ -51,9 +51,9 @@ pipeline {
         success {
             script {
                 if (env.BRANCH_NAME == 'staging') {
-                    echo "SUCCESS: Staging berhasil di-deploy! Akses: http://staging.fastwash.my.id"
+                    echo "SUCCESS: Staging berhasil di-deploy! Kasir: https://staging.fastwash.my.id | Nota: https://staging-nota.fastwash.my.id"
                 } else if (env.BRANCH_NAME == 'production') {
-                    echo "SUCCESS: Production berhasil di-deploy! Akses: http://fastwash.my.id"
+                    echo "SUCCESS: Production berhasil di-deploy! Kasir: https://fastwash.my.id | Nota: https://nota.fastwash.my.id"
                 } else {
                     echo "SUCCESS: Build & test berhasil untuk branch ${env.BRANCH_NAME} (tidak ada deployment)."
                 }
