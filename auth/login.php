@@ -8,9 +8,10 @@ if (isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Pesan error satu kali tampil (diset oleh auth/proses_login).
-$error = $_SESSION['flash_error'] ?? '';
-unset($_SESSION['flash_error']);
+// Pesan flash satu kali tampil
+$error   = $_SESSION['flash_error'] ?? '';
+$success = $_SESSION['flash_success'] ?? '';
+unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
 // Proses form login jika metode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -59,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <h1 class="mt-8 text-4xl font-extrabold text-[#16305b]">Handled with care</h1>
             <p class="mt-4 text-[#5b6b82] leading-relaxed">Mulai dari penjemputan di depan pintu hingga pengiriman dengan pakaian terlipat rapi.</p>
-            <img src="<?php echo $base; ?>assets/img/laundry-illustration.webp" alt="Ilustrasi mesin cuci, keranjang laundry, dan tumpukan handuk" class="mt-auto pt-8 w-full max-w-sm mx-auto">
+            <img src="<?php echo $base; ?>assets/img/auth/laundry-illustration.webp" alt="Ilustrasi mesin cuci, keranjang laundry, dan tumpukan handuk" class="mt-auto pt-8 w-full max-w-sm mx-auto">
         </section>
 
         <!-- Panel kanan: form masuk -->
@@ -74,6 +75,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="button" data-role="karyawan" aria-pressed="true"
                         class="js-role cursor-pointer py-2 text-center rounded-full bg-white text-[#1668dc] shadow-sm">Karyawan</button>
             </div>
+
+            <?php if (!empty($success)): ?>
+            <div role="alert" class="mt-6 rounded-xl bg-emerald-50 p-4 text-sm font-medium text-emerald-800 border border-emerald-200 flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span><?php echo e($success); ?></span>
+            </div>
+            <?php endif; ?>
 
             <?php if (!empty($error)): ?>
             <p role="alert" class="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><?php echo e($error); ?></p>
@@ -122,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                class="w-4 h-4 border border-gray-200 rounded bg-gray-50 accent-blue-700 focus:ring-2 focus:ring-blue-100">
                         <label for="ingat" class="ms-2 text-sm font-medium text-gray-900 select-none">Ingat saya</label>
                     </div>
-                    <a href="#" class="font-semibold text-[#1668dc] hover:underline">Lupa kata sandi?</a>
+                    <a href="<?php echo $base; ?>auth/forgot_password" class="font-semibold text-[#1668dc] hover:underline">Lupa kata sandi?</a>
                 </div>
 
                 <button type="submit"

@@ -39,7 +39,7 @@
             <section class="mt-6 rounded-3xl bg-[#0085ff] px-6 py-7 text-white shadow-xl shadow-[#0085ff]/25" aria-labelledby="cucian-aktif">
                 <p id="cucian-aktif" class="text-sm font-medium text-white/85">Cucian aktif</p>
                 <p class="mt-1 text-4xl font-extrabold tracking-tight">2 pesanan</p>
-                <p class="mt-4 max-w-[17rem] text-xs leading-relaxed text-white/85">
+                <p class="mt-4 max-w-68 text-xs leading-relaxed text-white/85">
                     Kami kirim notifikasi WhatsApp saat cucian siap diambil.
                 </p>
             </section>
