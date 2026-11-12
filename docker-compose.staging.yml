@@ -7,8 +7,8 @@ services:
     expose:
       - "80"
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
       - DB_NAME=${DB_NAME:-fast_wash_staging}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASS=${DB_PASS:-staging_secret_pass}
@@ -19,24 +19,3 @@ services:
       - BREVO_API_KEY=${BREVO_API_KEY:-}
       - MAIL_FROM_EMAIL=${MAIL_FROM_EMAIL:-support@gapunyaide.web.id}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Fast Wash Official}
-    depends_on:
-      - db
-
-  db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-fast_wash_staging}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASS:-staging_secret_pass}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-fast_wash_staging}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    volumes:
-      - pgdata_staging_v17:/var/lib/postgresql/data
-      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
-volumes:
-  pgdata_staging_v17:
