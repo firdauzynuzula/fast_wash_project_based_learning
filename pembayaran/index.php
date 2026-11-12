@@ -66,9 +66,9 @@ $menu = [
 
         <div class="flex min-w-0 flex-1 items-center justify-between gap-4 px-5 lg:px-8">
             <nav aria-label="Breadcrumb" class="hidden items-center gap-3 text-sm font-semibold sm:flex">
-                <a href="../pelanggan/index.php" class="text-[#0085ff] hover:underline">Pelanggan</a>
+                <a href="../pembayaran/index.php" class="text-[#0085ff] hover:underline">Pembayaran</a>
                 <svg class="size-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-                <span class="text-slate-600" aria-current="page">Daftar Pelanggan</span>
+                <span class="text-slate-600" aria-current="page">Daftar Pembayaran</span>
             </nav>
 
             <div class="ml-auto flex items-center gap-3">
