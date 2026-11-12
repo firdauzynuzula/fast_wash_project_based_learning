@@ -37,13 +37,7 @@ services:
       retries: 5
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
-      - ./sql/01_master_dan_identitas.sql:/docker-entrypoint-initdb.d/01_master_dan_identitas.sql:ro
-      - ./sql/02_pengguna_dan_autentikasi.sql:/docker-entrypoint-initdb.d/02_pengguna_dan_autentikasi.sql:ro
-      - ./sql/03_pesanan_dan_transaksi.sql:/docker-entrypoint-initdb.d/03_pesanan_dan_transaksi.sql:ro
-      - ./sql/04_absensi_dan_log.sql:/docker-entrypoint-initdb.d/04_absensi_dan_log.sql:ro
-      - ./sql/05_indeks_dan_trigger.sql:/docker-entrypoint-initdb.d/05_indeks_dan_trigger.sql:ro
-      - ./sql/06_views_antarmuka.sql:/docker-entrypoint-initdb.d/06_views_antarmuka.sql:ro
-      - ./sql/07_data_awal_seed.sql:/docker-entrypoint-initdb.d/07_data_awal_seed.sql:ro
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
 
 volumes:
   pgdata_prod:

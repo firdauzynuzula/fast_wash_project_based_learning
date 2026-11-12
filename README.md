@@ -1,14 +1,14 @@
 # Fast Wash
 
-Aplikasi manajemen operasional laundry dan layanan pelanggan berbasis web (Proyek PBL). Dibangun menggunakan **PHP 8.3 (prosedural)**, **PostgreSQL (PDO)**, **Tailwind CSS**, serta integrasi email via **Brevo (Sendinblue) REST API**.
+Aplikasi manajemen operasional laundry dan layanan pelanggan berbasis web (Proyek PBL). Dibangun menggunakan **PHP 8.3/8.4 (prosedural)**, **PostgreSQL 17 (PDO)**, **Tailwind CSS v4 + Flowbite**, serta integrasi email transaksional via **Brevo (Sendinblue) REST API** dan orkestrasi deployment modern menggunakan **Docker Compose & Coolify**.
 
 ---
 
 ## 🚀 Fitur Utama
 
 - **Autentikasi & Reset Password via Email**:
-  - Login dan register pengguna (Karyawan & Pemilik).
-  - Alur lupa kata sandi (*Forgot Password*) dengan token kedaluwarsa (1 jam) yang dikirim langsung ke email pengguna menggunakan **Brevo REST API via cURL HTTPS** (port 443, aman dari pemblokiran port SMTP lokal).
+  - Login dan registrasi pengguna dengan pemisahan peran (*Karyawan* & *Pemilik*).
+  - Alur lupa kata sandi (*Forgot Password*) dengan token kedaluwarsa (1 jam) yang dikirim langsung ke email pengguna menggunakan **Brevo REST API via cURL HTTPS** (port 443, aman dari pemblokiran port SMTP pada VPS/hosting).
 - **Dasbor Operasional & Analitik**:
   - Kartu metrik KPI harian real-time (*Pesanan Hari Ini*, *Sedang Diproses*, *Siap Diambil*, *Jam Kerja/Check-in*).
   - Antrean pengerjaan pesanan terbaru beserta status badge dinamis.
@@ -23,11 +23,13 @@ Aplikasi manajemen operasional laundry dan layanan pelanggan berbasis web (Proye
 - **Nota Digital & Tracking Pesanan Pelanggan (`/nota`)**:
   - Antarmuka ramah perangkat seluler untuk memantau progres cucian aktif dan riwayat status pengerjaan secara langsung oleh pelanggan.
 - **Manajemen Pesanan & Pelanggan**:
-  - CRUD Data Pelanggan dan Pesanan Laundry.
-- **Infrastruktur Modern (Docker & CI/CD)**:
-  - Dockerized menggunakan image resmi `php:8.3-apache-bookworm` dengan *security hardening*.
-  - Orkestrasi multi-environment menggunakan `docker-compose.staging.yml` dan `docker-compose.prod.yml`.
-  - Otomasi deployment melalui `Jenkinsfile` (*linting syntax*, *auto-deploy staging*, dan *manual approval gate* untuk *production*).
+  - CRUD Data Pelanggan dan Pesanan Laundry dengan validasi server-side dan proteksi CSRF.
+- **Otomasi Cache Busting (`asset_url()`)**:
+  - Seluruh stylesheet CSS dan skrip JavaScript dimuat menggunakan fungsi helper `asset_url()` yang otomatis menambahkan query parameter versi berbasis `filemtime` (contoh: `style.css?v=1731301234`), mencegah masalah tampilan akibat browser/CDN caching usang di Cloudflare.
+- **Infrastruktur Modern (Docker, PostgreSQL 17, & Coolify CI/CD)**:
+  - Containerization menggunakan base image resmi `php:8.3-apache-bookworm` yang diperkuat dengan *security hardening* (`expose_php = Off`, `ServerTokens Prod`).
+  - Database PostgreSQL versi terbaru (**v17-alpine**) dengan inisialisasi otomatis via direktori `docker-entrypoint-initdb.d/`.
+  - Orkestrasi deployment multi-environment (**Staging** & **Production**) terkelola melalui **Coolify PaaS** dan reverse proxy Traefik (Auto SSL Let's Encrypt).
 
 ---
 
@@ -38,12 +40,12 @@ fast-wash-pbl/
 ├── auth/                       # Alur autentikasi & akun
 │   ├── login.php               # Halaman login
 │   ├── proses_login.php        # Handler verifikasi login
-│   ├── register.php            # Halaman pendaftaran
-│   ├── proses_register.php     # Handler pendaftaran
-│   ├── forgot_password.php     # Form permintaan reset password
+│   ├── register.php            # Halaman pendaftaran akun
+│   ├── proses_register.php     # Handler pendaftaran akun
+│   ├── forgot_password.php     # Form permintaan tautan reset password
 │   ├── reset_password.php      # Form pembuatan password baru (validasi token)
 │   ├── proses_reset_password.php # Handler pembaruan password di database
-│   └── logout.php              # Handler keluar sistem
+│   └── logout.php              # Handler keluar sesi
 ├── dashboard/                  # Modul dasbor utama
 │   └── index.php               # Halaman dasbor metrik & antrean kerja
 ├── pelanggan/                  # Modul pelanggan & tracking
@@ -60,29 +62,36 @@ fast-wash-pbl/
 ├── log-activity/               # Modul audit trail & log aktivitas
 │   └── index.php               # Halaman tabel log aktivitas & filter
 ├── includes/                   # Library, helper, dan komponen bersama
-│   ├── bootstrap.php           # Inisialisasi awal (load .env & session)
-│   ├── config.php              # Loader konfigurasi aplikasi & email
+│   ├── bootstrap.php           # Inisialisasi awal (load .env, session, $base)
+│   ├── config.php              # Loader konfigurasi aplikasi, database & email
 │   ├── koneksi.php             # Koneksi database PostgreSQL via PDO
 │   ├── auth.php                # Middleware / guard proteksi halaman
 │   ├── csrf.php                # Proteksi CSRF token
-│   ├── helpers.php             # Fungsi utilitas (e(), flash message, format tanggal/rupiah)
+│   ├── helpers.php             # Fungsi utilitas (e(), asset_url(), flash message, token cache)
 │   ├── mailer.php              # Service pengiriman email via Brevo REST API
-│   ├── header.php              # Komponen topbar & navigasi atas
+│   ├── header.php              # Komponen topbar & navigasi atas (cache busted)
 │   └── sidebar.php             # Komponen sidebar navigasi utama
 ├── assets/                     # File statis frontend
 │   ├── css/                    # Tailwind source (input.css) & compiled (style.css)
-│   ├── js/app.js               # Script interaktif (sidebar, dropdown, modal)
+│   ├── js/app.js               # Script interaktif (drawer, eye toggle, toast demo)
 │   └── img/                    # Aset visual (auth, dashboard, mobile, svg)
-├── sql/                        # Skrip database PostgreSQL
-│   ├── 00_database.sql s/d 07_data_awal_seed.sql
-│   └── fast_wash_all_in_one.sql # Skema & seed data all-in-one
-├── tools/                      # CLI pendukung (tailwindcss.exe lokal)
+├── docker-entrypoint-initdb.d/ # Skrip SQL modular inisialisasi awal container PostgreSQL 17
+│   ├── 01_master_dan_identitas.sql
+│   ├── 02_pengguna_dan_autentikasi.sql
+│   ├── 03_pesanan_dan_transaksi.sql
+│   ├── 04_absensi_dan_log.sql
+│   ├── 05_indeks_dan_trigger.sql
+│   ├── 06_views_antarmuka.sql
+│   └── 07_data_awal_seed.sql
+├── sql/                        # Arsip referensi skrip database PostgreSQL
+│   └── fast_wash_all_in_one.sql # Skema & seed data all-in-one untuk DBeaver/pgAdmin
+├── tools/                      # CLI pendukung (tailwindcss.exe lokal Windows)
 ├── .env.example                # Template konfigurasi variabel lingkungan
 ├── .htaccess                   # Rewrite engine Apache untuk URL bersih tanpa .php
-├── Dockerfile                  # Konfigurasi container PHP 8.3 Apache + PDO pgsql
-├── docker-compose.staging.yml  # Orkestrasi Docker untuk environment Staging
-├── docker-compose.prod.yml     # Orkestrasi Docker untuk environment Production
-├── Jenkinsfile                 # Pipeline CI/CD Jenkins (Lint -> Staging -> Production)
+├── Dockerfile                  # Image container PHP 8.3 Apache + PDO pgsql
+├── docker-compose.staging.yml  # Definisi stack Staging (App + PostgreSQL 17)
+├── docker-compose.prod.yml     # Definisi stack Production (App + PostgreSQL 17)
+├── Jenkinsfile                 # (Arsip/Deprecated) Digantikan oleh Coolify GitHub Webhook
 └── index.php                   # Front controller & router aplikasi
 ```
 
@@ -107,36 +116,31 @@ Routing dikelola secara terpusat oleh `index.php` sebagai *front controller*. Re
 | `/log-activity` | `log-activity/index.php` | Audit trail aktivitas sistem |
 | `/nota` | `pelanggan/pesanan.php` | Nota digital & pelacakan status cucian pelanggan |
 
-> **Penting**: Semua atribut `href` dan `action` pada form HTML harus ditulis **tanpa `.php`** (contoh: `<a href="<?= $base ?>dashboard">`). Form POST ke file `.php` langsung akan teralihkan melalui redirect 301 dan kehilangan data payload POST.
+> **Penting**: Semua atribut `href` dan `action` pada form HTML harus ditulis **tanpa `.php`** (contoh: `<a href="<?= $base ?>dashboard">`). Form POST ke file `.php` langsung akan teralihkan melalui redirect 301 dan kehilangan data payload POST. Untuk pemanggilan aset CSS/JS, gunakan `<?= asset_url('assets/...') ?>`.
 
 ---
 
-## ⚙️ Panduan Setup & Instalasi
+## ⚙️ Panduan Setup & Instalasi Lokal
 
 ### 1. Prasyarat Sistem
-- PHP 8.2 atau 8.3 dengan ekstensi: `pdo`, `pdo_pgsql`, `curl`, `mbstring`, `openssl`.
-- PostgreSQL Database Server (versi 15 atau lebih baru).
-- Web Server Apache dengan modul `mod_rewrite` aktif.
-- Akun [Brevo](https://www.brevo.com/) (gratis) untuk pengiriman email reset password.
+- **PHP**: Versi 8.2, 8.3, atau 8.4 dengan ekstensi aktif: `pdo`, `pdo_pgsql`, `curl`, `mbstring`, `openssl`.
+- **Database**: PostgreSQL Server (versi 15, 16, atau 17).
+- **Web Server**: Apache dengan modul `mod_rewrite` aktif (atau PHP CLI built-in server).
+- **Akun Brevo**: Akun gratis [Brevo (Sendinblue)](https://www.brevo.com/) untuk pengiriman email transaksional reset password.
 
 ---
 
 ### 2. Setup Database PostgreSQL
-1. Buat database baru bernama `fast_wash` (misalnya via DBeaver atau pgAdmin).
+
+1. Buat database baru bernama `fast_wash` di PostgreSQL lokal Anda.
 2. Eksekusi skrip SQL:
-   - **Opsi Cepat (Direkomendasikan)**: Buka dan jalankan seluruh isi file [`sql/fast_wash_all_in_one.sql`](file:///E:/fast-wash-pbl/sql/fast_wash_all_in_one.sql) (di DBeaver: `Alt + X`).
-   - **Opsi Bertahap**: Jalankan berurutan:
-     1. `sql/01_master_dan_identitas.sql`
-     2. `sql/02_pengguna_dan_autentikasi.sql`
-     3. `sql/03_pesanan_dan_transaksi.sql`
-     4. `sql/04_absensi_dan_log.sql`
-     5. `sql/05_indeks_dan_trigger.sql`
-     6. `sql/06_views_antarmuka.sql`
-     7. `sql/07_data_awal_seed.sql`
+   - **Opsi Cepat**: Buka dan jalankan seluruh isi file [`sql/fast_wash_all_in_one.sql`](file:///E:/fast-wash-pbl/sql/fast_wash_all_in_one.sql) (di DBeaver: `Alt + X`).
+   - **Opsi Modular**: Eksekusi file SQL di direktori [`docker-entrypoint-initdb.d/`](file:///E:/fast-wash-pbl/docker-entrypoint-initdb.d) secara berurutan dari `01` sampai `07`.
 
 ---
 
 ### 3. Konfigurasi Lingkungan (`.env`)
+
 Salin file `.env.example` menjadi `.env` di direktori root aplikasi:
 
 ```bash
@@ -164,58 +168,64 @@ APP_URL=http://localhost:8000
 
 ---
 
-### 4. Menjalankan Aplikasi
+### 4. Menjalankan Aplikasi di Komputer Lokal
 
-#### Opsi A: Apache (Laragon / XAMPP)
-- **Laragon**: Letakkan proyek di direktori `www/`. Secara bawaan modul `mod_rewrite` dan `AllowOverride All` sudah aktif. Akses melalui `http://fast-wash-pbl.test/` atau `http://localhost/fast-wash-pbl/`.
-- **XAMPP**: Pastikan pada `httpd.conf` Apache direktif `AllowOverride` telah diatur ke `All` dan modul `rewrite_module` diaktifkan.
-
-#### Opsi B: PHP Built-in Server (Development Cepat)
+#### Opsi A: PHP Built-in Server (Paling Cepat & Praktis)
 Jalankan server PHP bawaan dengan menyertakan `index.php` sebagai router:
 ```bash
 php -S localhost:8000 index.php
 ```
 Buka browser pada alamat `http://localhost:8000`.
 
-#### Opsi C: Menggunakan Docker Compose
-Aplikasi telah dilengkapi konfigurasi Docker lengkap beserta database PostgreSQL:
+#### Opsi B: Apache (Laragon / XAMPP)
+- **Laragon**: Letakkan folder proyek di dalam direktori `laragon/www/`. Modul `mod_rewrite` dan `AllowOverride All` sudah aktif secara bawaan. Akses melalui `http://fast-wash-pbl.test/` atau `http://localhost/fast-wash-pbl/`.
+- **XAMPP**: Letakkan di `xampp/htdocs/fast-wash-pbl`. Pastikan pada `httpd.conf` Apache direktif `AllowOverride` bernilai `All` dan modul `rewrite_module` aktif.
 
-- **Environment Staging**:
-  ```bash
-  docker compose -f docker-compose.staging.yml up -d --build
-  ```
-- **Environment Production**:
-  ```bash
-  docker compose -f docker-compose.prod.yml up -d --build
-  ```
+#### Opsi C: Menjalankan via Docker Compose Lokal
+Pastikan Docker Desktop aktif di komputer Anda, lalu jalankan:
+```bash
+# Jalankan environment Staging lokal
+docker compose -f docker-compose.staging.yml up -d --build
+```
+Akses aplikasi melalui port yang telah dikonfigurasi.
 
 ---
 
-### 5. Kompilasi Tailwind CSS (Opsional)
-CSS hasil kompilasi Tailwind sudah disertakan pada `assets/css/style.css`. Jika Anda melakukan modifikasi styling pada `assets/css/input.css` atau markup template HTML/PHP, lakukan *build* ulang menggunakan CLI lokal:
+### 5. Kompilasi Tailwind CSS (Pengembangan Tampilan)
+
+CSS hasil kompilasi Tailwind sudah disertakan pada `assets/css/style.css` (siap pakai tanpa build). Jika Anda memodifikasi utility class pada file PHP atau mengubah `assets/css/input.css`, lakukan kompilasi ulang menggunakan CLI lokal:
 
 ```bash
+# Kompilasi minified sekali jalan
 tools\tailwindcss.exe -i assets/css/input.css -o assets/css/style.css --minify
-```
 
-Gunakan flag `--watch` untuk memantau perubahan file secara otomatis selama proses pengembangan:
-```bash
+# Mode watch (otomatis kompilasi setiap kali ada file disimpan)
 tools\tailwindcss.exe -i assets/css/input.css -o assets/css/style.css --watch
 ```
 
 ---
 
-## 🔄 Integrasi CI/CD & Deployment
+## 🌐 Deployment & CI/CD dengan Coolify
 
-Pipeline CI/CD terotomatisasi didefinisikan pada [`Jenkinsfile`](file:///E:/fast-wash-pbl/Jenkinsfile) dengan tahapan:
-1. **Checkout**: Mengambil kode sumber dari repositori GitHub.
-2. **Syntax Check (Lint)**: Memvalidasi integritas seluruh file sintaks PHP (`php -l`).
-3. **Deploy to Staging**: Dijalankan otomatis ketika ada commit/merge ke branch `staging`.
-   - Domain Layanan: `https://staging.fastwash.web.id`
-   - Domain Nota: `https://staging-nota.fastwash.web.id`
-4. **Deploy to Production**: Dijalankan pada branch `production` dengan **persetujuan manual (*manual approval gate*)** di antarmuka Jenkins sebelum rilis ke server produksi.
-   - Domain Layanan: `https://fastwash.web.id`
-   - Domain Nota: `https://nota.fastwash.web.id`
+Proyek ini telah dikonfigurasi penuh untuk di-deploy menggunakan **Coolify (Self-Hosted PaaS)** di server VPS. Tidak memerlukan instalasi Jenkins atau konfigurasi Nginx manual di host VPS.
+
+### Lingkungan & Pemetaan Domain
+
+| Environment | Branch Git | Domain Layanan Utama | Domain Nota Digital | Mekanisme Rilis |
+| :--- | :--- | :--- | :--- | :--- |
+| **Staging** | `staging` | `https://staging.gapunyaide.web.id` | `https://staging-nota.gapunyaide.web.id` | **Auto-Deploy** via GitHub Webhook |
+| **Production** | `production` | `https://fastwash.web.id` | `https://nota.fastwash.web.id` | **Manual Approval** (Klik Deploy di Coolify) |
+
+### Ringkasan Langkah Setup di Coolify:
+1. Pastikan VPS telah terinstal Coolify (`curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash`).
+2. Di Coolify, buat Resource baru dengan tipe **Docker Compose**.
+3. Arahkan file compose sesuai environment:
+   - **Staging**: Menggunakan `/docker-compose.staging.yml`
+   - **Production**: Menggunakan `/docker-compose.prod.yml`
+4. Masukkan nama domain pada kolom Domains di service `app`, dan atur environment variables (`DB_PASS`, `BREVO_API_KEY`, dll.).
+5. Traefik bawaan Coolify akan otomatis menangani perutean domain dan menerbitkan sertifikat SSL Let's Encrypt secara otomatis.
+
+> 📖 **Panduan Lengkap Coolify & Cloudflare**: Silakan baca dokumen panduan terperinci pada [**`prompt/docs/tahapan-tahapan-ci-cd.md`**](file:///E:/fast-wash-pbl/prompt/docs/tahapan-tahapan-ci-cd.md).
 
 ---
 
@@ -247,7 +257,7 @@ Kontribusi pada proyek **Fast Wash** menggunakan alur kerja **Fork & Pull Reques
 
 ### 1. Fork & Clone Repositori
 
-1. Buka halaman repositori utama di GitHub:
+1. Buka halaman repositori utama di GitHub:  
    [`https://github.com/firdauzynuzula/fast_wash_project_based_learning`](https://github.com/firdauzynuzula/fast_wash_project_based_learning)
 2. Klik tombol **Fork** di pojok kanan atas untuk menyalin repositori ke akun GitHub Anda.
 3. *Clone* repositori hasil *fork* dari akun GitHub Anda ke komputer lokal:
@@ -258,39 +268,18 @@ Kontribusi pada proyek **Fast Wash** menggunakan alur kerja **Fork & Pull Reques
 
 ---
 
-### 2. Setup Awal Setelah Melakukan Forking
+### 2. Setup Awal Remote Upstream
 
-Setelah berhasil melakukan *clone* dari repositori *fork*, lakukan konfigurasi remote dan lingkungan kerja lokal berikut satu kali di awal:
-
-#### A. Hubungkan dengan Repositori Utama (`upstream`)
-Tambahkan URL repositori utama sebagai remote bernama `upstream` agar Anda dapat menarik pembaruan dari repositori utama kapan saja:
+Tambahkan URL repositori utama sebagai remote bernama `upstream` agar Anda dapat menarik pembaruan kapan saja:
 
 ```bash
 git remote add upstream https://github.com/firdauzynuzula/fast_wash_project_based_learning.git
 ```
 
-Pastikan daftar remote sudah memiliki `origin` (repo *fork* Anda) dan `upstream` (repo utama):
+Pastikan daftar remote sudah memiliki `origin` dan `upstream`:
 ```bash
 git remote -v
-# origin    https://github.com/<username-anda>/fast_wash_project_based_learning.git (fetch)
-# origin    https://github.com/<username-anda>/fast_wash_project_based_learning.git (push)
-# upstream  https://github.com/firdauzynuzula/fast_wash_project_based_learning.git (fetch)
-# upstream  https://github.com/firdauzynuzula/fast_wash_project_based_learning.git (push)
 ```
-
-#### B. Setup Lingkungan Lokal & Database
-1. **Salin File Environment**:
-   ```bash
-   cp .env.example .env
-   ```
-   Sesuaikan konfigurasi database (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`) di dalam file `.env`.
-2. **Inisialisasi Database PostgreSQL**:
-   Buat database `fast_wash` di PostgreSQL lokal Anda, lalu jalankan skrip [`sql/fast_wash_all_in_one.sql`](file:///E:/fast-wash-pbl/sql/fast_wash_all_in_one.sql) untuk membuat seluruh tabel, *trigger*, *view*, dan *seed data* awal.
-3. **Jalankan Server Lokal**:
-   ```bash
-   php -S localhost:8000 index.php
-   ```
-   Pastikan aplikasi berjalan dengan baik di `http://localhost:8000` sebelum mulai menulis kode.
 
 ---
 
@@ -323,52 +312,28 @@ git remote -v
 
 ---
 
-### 4. Skenario Sinkronisasi (Sync Fork) Saat Repositori Utama Diperbarui
+### 4. Sinkronisasi Fork (Sync Fork)
 
-Ketika repositori utama (`upstream`) mendapatkan pembaruan (misalnya ada perubahan baru yang di-*merge* ke `master`), repositori *fork* (`origin`) dan kode di komputer lokal Anda akan tertinggal (*behind*). Anda **wajib melakukan sinkronisasi** agar tidak terjadi konflik (*merge conflict*) saat bekerja atau mengirim PR baru.
+Jika repositori utama (`upstream`) mendapatkan pembaruan baru dari anggota tim lain, lakukan sinkronisasi branch `master` lokal Anda:
 
-#### Opsi 1: Sinkronisasi Melalui Terminal / Git CLI (Direkomendasikan)
+```bash
+git fetch upstream
+git checkout master
+git merge upstream/master
+git push origin master
+```
 
-1. **Ambil (*fetch*) riwayat terbaru dari repositori utama (`upstream`)**:
-   ```bash
-   git fetch upstream
-   ```
-2. **Pindah ke branch `master` lokal dan gabungkan perubahan dari `upstream/master`**:
-   ```bash
-   git checkout master
-   git merge upstream/master
-   ```
-3. **Push pembaruan tersebut ke repositori *fork* Anda di GitHub (`origin`) agar ikut sinkron**:
-   ```bash
-   git push origin master
-   ```
-
-> **Bagaimana jika Anda sedang mengerjakan branch fitur (`feat/nama-fitur`) yang belum selesai saat repo utama di-update?**
-> Setelah menjalankan langkah 1–3 di atas, perbarui branch fitur Anda dengan menggabungkan `master` terbaru ke dalam branch fitur tersebut:
-> ```bash
-> git checkout feat/nama-fitur
-> git merge master
-> ```
-> Jika terdapat *conflict*, selesaikan bagian yang bentrok pada editor Anda, lalu jalankan `git add .` dan `git commit`.
-
-#### Opsi 2: Sinkronisasi Melalui Antarmuka Web GitHub
-
-1. Buka halaman repositori *fork* Anda di GitHub (`https://github.com/<username-anda>/fast_wash_project_based_learning`).
-2. Klik tombol **"Sync fork"** yang terletak di bawah nama repositori, kemudian klik **"Update branch"**.
-3. Setelah *fork* di GitHub berhasil diperbarui, tarik (*pull*) perubahan tersebut ke komputer lokal Anda:
-   ```bash
-   git checkout master
-   git pull origin master
-   ```
-
-#### Hal yang Perlu Dicek Setelah Melakukan Sync:
-- **Perubahan Variabel `.env`**: Cek apakah ada variabel baru di [`.env.example`](file:///E:/fast-wash-pbl/.env.example). Jika ada, tambahkan variabel tersebut ke file `.env` lokal Anda.
-- **Perubahan Skema Database (`sql/`)**: Jika pembaruan dari repo utama menyertakan perubahan pada direktori [`sql/`](file:///E:/fast-wash-pbl/sql), jalankan ulang skrip SQL yang berubah (atau eksekusi ulang [`sql/fast_wash_all_in_one.sql`](file:///E:/fast-wash-pbl/sql/fast_wash_all_in_one.sql)) di database lokal Anda agar struktur tabel dan *view* tetap sinkron.
+Jika Anda sedang memiliki branch fitur aktif (`feat/nama-fitur`), gabungkan perubahan `master` terbaru ke branch fitur tersebut:
+```bash
+git checkout feat/nama-fitur
+git merge master
+```
 
 ---
 
-### 5. Standar & Catatan Pengembangan
+### 5. Standar & Aturan Pengembangan
 
 - Seluruh endpoint halaman baru wajib didaftarkan pada array `$routes` di [`index.php`](file:///E:/fast-wash-pbl/index.php).
 - Pastikan selalu menggunakan fungsi `e()` dari [`includes/helpers.php`](file:///E:/fast-wash-pbl/includes/helpers.php) saat mencetak variabel ke HTML untuk mencegah kerentanan XSS.
-- Lindungi form penting (seperti pendaftaran dan proses status) menggunakan token CSRF dari [`includes/csrf.php`](file:///E:/fast-wash-pbl/includes/csrf.php).
+- Gunakan fungsi `asset_url()` untuk memanggil seluruh file CSS dan JS agar terbebas dari masalah caching.
+- Lindungi form penting (seperti pendaftaran, login, dan aksi status) menggunakan token CSRF dari [`includes/csrf.php`](file:///E:/fast-wash-pbl/includes/csrf.php).
