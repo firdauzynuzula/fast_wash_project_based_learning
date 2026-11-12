@@ -20,8 +20,7 @@ services:
       - MAIL_FROM_EMAIL=${MAIL_FROM_EMAIL:-support@gapunyaide.web.id}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Fast Wash Official}
     depends_on:
-      db:
-        condition: service_healthy
+      - db
 
   db:
     image: postgres:17-alpine
@@ -31,13 +30,13 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-staging_secret_pass}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-fast_wash_staging}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     volumes:
-      - pgdata_staging:/var/lib/postgresql/data
+      - pgdata_staging_v17:/var/lib/postgresql/data
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
-
 volumes:
-  pgdata_staging:
+  pgdata_staging_v17:
