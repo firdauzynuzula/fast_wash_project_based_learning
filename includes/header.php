@@ -16,8 +16,8 @@ $userInitial = strtoupper(substr(trim($userName), 0, 1) ?: 'K');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fast Wash<?php echo isset($title) ? ' — ' . e($title) : ''; ?></title>
-    <!-- Stylesheet Tailwind CSS v4 & Flowbite terkompilasi -->
-    <link rel="stylesheet" href="<?php echo $base; ?>assets/css/style.css">
+    <!-- Stylesheet Tailwind CSS v4 & Flowbite terkompilasi (dengan Cache Busting) -->
+    <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
 </head>
 <body class="bg-[#EFF6FF] font-sans text-slate-800 antialiased h-screen overflow-hidden">
 

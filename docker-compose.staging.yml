@@ -3,39 +3,47 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastwash_app_staging
-    restart: always
-    ports:
-      - "127.0.0.1:8082:80"
+    restart: unless-stopped
+    expose:
+      - "80"
     environment:
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_NAME=fast_wash_staging
-      - DB_USER=postgres
-      - DB_PASS=staging_secret_pass
-      - DB_SSLMODE=disable
-      - APP_DEBUG=true
-      - NOTA_BASE_URL=https://staging-nota.fastwash.my.id
+      - DB_NAME=${DB_NAME:-fast_wash_staging}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-staging_secret_pass}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${APP_URL:-https://staging.gapunyaide.web.id}
+      - NOTA_BASE_URL=${NOTA_BASE_URL:-https://staging-nota.gapunyaide.web.id}
+      - BREVO_API_KEY=${BREVO_API_KEY:-}
+      - MAIL_FROM_EMAIL=${MAIL_FROM_EMAIL:-support@gapunyaide.web.id}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Fast Wash Official}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
-    image: postgres:15-alpine
-    container_name: fastwash_db_staging
-    restart: always
+    image: postgres:17-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: fast_wash_staging
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: staging_secret_pass
+      POSTGRES_DB: ${DB_NAME:-fast_wash_staging}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-staging_secret_pass}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - pgdata_staging:/var/lib/postgresql/data
-      - ./sql/01_master_dan_identitas.sql:/docker-entrypoint-initdb.d/01_master_dan_identitas.sql
-      - ./sql/02_pengguna_dan_autentikasi.sql:/docker-entrypoint-initdb.d/02_pengguna_dan_autentikasi.sql
-      - ./sql/03_pesanan_dan_transaksi.sql:/docker-entrypoint-initdb.d/03_pesanan_dan_transaksi.sql
-      - ./sql/04_absensi_dan_log.sql:/docker-entrypoint-initdb.d/04_absensi_dan_log.sql
-      - ./sql/05_indeks_dan_trigger.sql:/docker-entrypoint-initdb.d/05_indeks_dan_trigger.sql
-      - ./sql/06_views_antarmuka.sql:/docker-entrypoint-initdb.d/06_views_antarmuka.sql
-      - ./sql/07_data_awal_seed.sql:/docker-entrypoint-initdb.d/07_data_awal_seed.sql
+      - ./sql/01_master_dan_identitas.sql:/docker-entrypoint-initdb.d/01_master_dan_identitas.sql:ro
+      - ./sql/02_pengguna_dan_autentikasi.sql:/docker-entrypoint-initdb.d/02_pengguna_dan_autentikasi.sql:ro
+      - ./sql/03_pesanan_dan_transaksi.sql:/docker-entrypoint-initdb.d/03_pesanan_dan_transaksi.sql:ro
+      - ./sql/04_absensi_dan_log.sql:/docker-entrypoint-initdb.d/04_absensi_dan_log.sql:ro
+      - ./sql/05_indeks_dan_trigger.sql:/docker-entrypoint-initdb.d/05_indeks_dan_trigger.sql:ro
+      - ./sql/06_views_antarmuka.sql:/docker-entrypoint-initdb.d/06_views_antarmuka.sql:ro
+      - ./sql/07_data_awal_seed.sql:/docker-entrypoint-initdb.d/07_data_awal_seed.sql:ro
 
 volumes:
   pgdata_staging:
