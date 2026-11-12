@@ -38,6 +38,5 @@ services:
     volumes:
       - pgdata_staging_v17:/var/lib/postgresql/data
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
-
 volumes:
   pgdata_staging_v17:
