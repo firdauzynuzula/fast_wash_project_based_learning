@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fast Wash — Buat Akun Baru</title>
-    <link rel="stylesheet" href="<?php echo $base; ?>assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
 </head>
 <body class="min-h-screen overflow-hidden bg-[#E2E8F0] flex items-center justify-center p-4">
 
@@ -211,6 +211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </section>
     </div>
 
-    <script src="<?php echo $base; ?>assets/js/app.js"></script>
+    <script src="<?php echo asset_url('assets/js/app.js'); ?>"></script>
 </body>
 </html>

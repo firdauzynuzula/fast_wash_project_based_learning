@@ -8,7 +8,6 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/
-docs/
 .agents/
 prompt/
 openspec/

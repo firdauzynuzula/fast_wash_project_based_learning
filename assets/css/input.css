@@ -23,6 +23,11 @@
     }
 }
 
+  @theme {
+        --color-slate-100: #f1f5f9;
+        --color-slate-200: #e2e8f0;
+    }
+
 /* Sembunyikan bilah gulir (scrollbar) di seluruh elemen aplikasi secara visual */
 *::-webkit-scrollbar {
     display: none;

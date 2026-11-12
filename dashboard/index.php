@@ -250,7 +250,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <!-- Dependensi Skrip -->
-    <script src="<?php echo $base; ?>assets/vendor/flowbite.min.js"></script>
-    <script src="<?php echo $base; ?>assets/js/app.js"></script>
+    <script src="<?php echo asset_url('assets/vendor/flowbite.min.js'); ?>"></script>
+    <script src="<?php echo asset_url('assets/js/app.js'); ?>"></script>
 </body>
 </html>

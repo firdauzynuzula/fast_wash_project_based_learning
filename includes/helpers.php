@@ -5,6 +5,21 @@ function e(?string $s): string
 }
 
 /**
+ * Menghasilkan URL aset dengan query version berbasis waktu modifikasi file (cache busting).
+ * Memastikan peramban dan CDN (seperti Cloudflare) selalu mengunduh aset terbaru saat ada perubahan.
+ */
+function asset_url(string $path): string
+{
+    global $base;
+    $prefix = $base ?? './';
+    $cleanPath = ltrim($path, '/');
+    $fullPath = dirname(__DIR__) . '/' . $cleanPath;
+    $version = is_file($fullPath) ? (string) filemtime($fullPath) : '1.0';
+
+    return $prefix . $cleanPath . '?v=' . $version;
+}
+
+/**
  * Simpan token reset password di sesi dan server-side cache (temporary file).
  * Ini mencegah token invalid saat link diklik dari aplikasi eksternal (seperti Gmail)
  * di mana browser belum sempat menyertakan cookie PHPSESSID pada first-click.
