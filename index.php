@@ -32,7 +32,23 @@ $routes = [
     'transaksi/proses_tambah' => 'transaksi/proses_tambah.php',
     'transaksi/status'        => 'transaksi/status.php',
     'transaksi/proses_status' => 'transaksi/proses_status.php',
+    'transaksi/detail'        => 'transaksi/detail.php',
+    'transaksi/sukses'        => 'transaksi/sukses.php',
+    'transaksi/nota'          => 'transaksi/nota.php',
+    'transaksi/bayar'         => 'transaksi/bayar.php',
     'transaksi/riwayat'       => 'transaksi/riwayat.php',
+
+    // Alias Pesanan (Frontend / Navigasi)
+    'pesanan'                 => 'pesanan/list.php',
+    'pesanan/status'          => 'pesanan/list.php',
+    'pesanan/list'            => 'pesanan/list.php',
+    'pesanan/tambah'          => 'pesanan/tambah.php',
+    'pesanan/detail'          => 'pesanan/edit.php',
+    'pesanan/proses_tambah'   => 'pesanan/proses_tambah.php',
+    'pesanan/proses_edit'     => 'pesanan/proses_edit.php',
+    'pesanan/hapus'           => 'pesanan/hapus.php',
+    'pesanan/sukses'          => 'transaksi/sukses.php',
+    'pesanan/nota'            => 'transaksi/nota.php',
 
     'pembayaran'              => 'pembayaran/index.php',
     'pembayaran/index'        => 'pembayaran/index.php',
