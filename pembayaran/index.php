@@ -35,7 +35,8 @@ $menu = [
     ['label' => 'Dasbor',        'href' => '../dashboard/index.php', 'aktif' => false, 'icon' => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'],
     ['label' => 'Pesanan',       'href' => '../pesanan/index.php',   'aktif' => false, 'icon' => '<path d="M8 3 3 6l2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 0 1-8 0Z"/>'],
     ['label' => 'Pelanggan',     'href' => '../pelanggan/index.php', 'aktif' => false, 'icon' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.5A6.5 6.5 0 0 1 21.5 20"/>'],
-    ['label' => 'Pembayaran',    'href' => 'pembayaran.php',         'aktif' => true,  'icon' => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/>'],
+    ['label' => 'Pembayaran',    'href' => 'index.php',              'aktif' => true,  'icon' => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/>'],
+    ['label' => 'Laporan',       'href' => '../laporan/index.php',      'aktif' => false, 'icon' => '<path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-6"/>'],
     ['label' => 'Absensi',       'href' => '../absensi/index.php',   'aktif' => false, 'icon' => '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/><path d="m9.5 15.5 2 2 3.5-4"/>'],
     ['label' => 'Log Aktivitas', 'href' => '../log-activity/index.php', 'aktif' => false, 'icon' => '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M12 7.5V12l3 2"/>'],
 ];
@@ -65,11 +66,7 @@ $menu = [
         </a>
 
         <div class="flex min-w-0 flex-1 items-center justify-between gap-4 px-5 lg:px-8">
-            <nav aria-label="Breadcrumb" class="hidden items-center gap-3 text-sm font-semibold sm:flex">
-                <a href="../pembayaran/index.php" class="text-[#0085ff] hover:underline">Pembayaran</a>
-                <svg class="size-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-                <span class="text-slate-600" aria-current="page">Daftar Pembayaran</span>
-            </nav>
+            <p class="hidden text-sm font-semibold text-[#0085ff] sm:block" aria-current="page">Pembayaran</p>
 
             <div class="ml-auto flex items-center gap-3">
                 <button type="button" class="relative flex size-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0085ff]/40" aria-label="Notifikasi">
