@@ -4,7 +4,6 @@
  * Sesuai desain Figma (Dashboard-Karyawan.png)
  */
 $title = 'Dasbor';
-$tanpaDb = true;
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';

@@ -1,27 +1,27 @@
 <?php
-$tanpaDb = true;
 require_once __DIR__ . '/../includes/bootstrap.php';
-require_once __DIR__ . '/../includes/auth_default.php';
+require_once __DIR__ . '/../includes/auth_db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . $base . 'auth/login.php');
+    header('Location: ' . $base . '');
     exit;
 }
 
 csrf_check();
 
-$username = trim($_POST['username'] ?? '');
-$password = (string) ($_POST['password'] ?? '');
+$username     = trim($_POST['username'] ?? '');
+$password     = (string) ($_POST['password'] ?? '');
+$selectedRole = in_array($_POST['role'] ?? '', ['pemilik', 'karyawan'], true) ? $_POST['role'] : 'karyawan';
+$ingat        = isset($_POST['ingat']);
 
-if (cek_login_default($username, $password)) {
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = 1;
-    $_SESSION['nama']    = 'Admin';
-    $_SESSION['role']    = 'admin';
+$user = verifikasi_login($pdo, $username, $password, $selectedRole);
+
+if ($user) {
+    mulai_sesi($pdo, $user, $ingat);
     header('Location: ' . $base . 'dashboard');
     exit;
 }
 
-$_SESSION['flash_error'] = 'Username atau kata sandi salah.';
-header('Location: ' . $base . 'auth/login');
+$_SESSION['flash_error'] = 'Email/nomor HP, kata sandi, atau peran salah.';
+header('Location: ' . $base . '');
 exit;

@@ -36,7 +36,7 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
     <title>Fast Wash — Buat Kata Sandi Baru</title>
     <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
 </head>
-<body class="min-h-screen bg-[#E2E8F0] flex items-center justify-center p-4">
+<body class="min-h-screen bg-slate-200 flex items-center justify-center p-4">
 
     <div class="w-full max-w-4xl grid md:grid-cols-2 rounded-2xl overflow-hidden shadow-xl bg-white">
 
