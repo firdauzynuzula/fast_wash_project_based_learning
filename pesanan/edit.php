@@ -15,7 +15,7 @@ $stmtPesanan = $pdo->prepare(
             pl.nama AS nama_pelanggan,
             pl.no_telepon AS no_pelanggan,
             pl.alamat AS alamat_pelanggan,
-            k.nama AS nama_kasir,
+            k.nama AS nama_karyawan,
             (SELECT string_agg(l.nama_layanan, ', ')
                FROM detail_pesanan d
                JOIN layanan l ON l.id_layanan = d.id_layanan
@@ -60,36 +60,30 @@ $currentStatus = strtolower($pesanan['status']);
 $isLunas       = ($pesanan['status_bayar'] === 'lunas');
 $metodeBayar   = $trxBayar ? strtoupper($trxBayar['jenis_pembayaran']) : 'TUNAI';
 
-// Alur 5 Tahapan Utama (Sesuai Desain Figma: Diterima -> Dicuti -> Disetrika -> Selesai -> Diambil)
+// Alur 4 Tahapan Utama (diterima - diproses - selesai - diambil)
 $flow = [
     'diterima' => [
-        'ui_urutan' => 1,
-        'label'  => 'Diterima',
-        'next'   => 'diproses',
-        'next_btn' => 'Lanjut ke Dicuti',
+        'urutan'   => 1,
+        'label'    => 'Diterima',
+        'next'     => 'diproses',
+        'next_btn' => 'Ubah Ke Diproses',
     ],
     'diproses' => [
-        'ui_urutan' => 3,
-        'label'  => 'Diproses',
-        'next'   => 'selesai',
-        'next_btn' => 'Lanjut ke Selesai',
-    ],
-    'disetrika' => [
-        'ui_urutan' => 3,
-        'label'  => 'Disetrika',
-        'next'   => 'selesai',
-        'next_btn' => 'Lanjut ke Selesai',
+        'urutan'   => 2,
+        'label'    => 'Diproses',
+        'next'     => 'selesai',
+        'next_btn' => 'Ubah Ke Selesai',
     ],
     'selesai' => [
-        'ui_urutan' => 4,
-        'label'  => 'Selesai',
-        'next'   => 'diambil',
-        'next_btn' => 'Lanjut ke Diambil',
+        'urutan'   => 3,
+        'label'    => 'Selesai',
+        'next'     => 'diambil',
+        'next_btn' => 'Ubah Ke Diambil',
     ],
     'diambil' => [
-        'ui_urutan' => 5,
-        'label'  => 'Diambil',
-        'next'   => null,
+        'urutan'   => 4,
+        'label'    => 'Diambil',
+        'next'     => null,
         'next_btn' => null,
     ],
 ];
@@ -98,13 +92,13 @@ $flow = [
 $currentStep = 1; // default: Diterima
 switch ($currentStatus) {
     case 'diproses':
-        $currentStep = 3; // diasumsikan Dicuti + Disetrika sudah selesai
+        $currentStep = 2;
         break;
     case 'selesai':
-        $currentStep = 4;
+        $currentStep = 3;
         break;
     case 'diambil':
-        $currentStep = 5;
+        $currentStep = 4;
         break;
     default:
         $currentStep = 1;
@@ -112,7 +106,7 @@ switch ($currentStatus) {
 }
 
 $currentStepInfo = $flow[$currentStatus] ?? $flow['diterima'];
-$currentStepNum  = $currentStepInfo['ui_urutan'] ?? 1;
+$currentStepNum  = $currentStepInfo['urutan'] ?? 1;
 $nextStatus      = $currentStepInfo['next'] ?? null;
 $nextBtnLabel    = $currentStepInfo['next_btn'] ?? null;
 
@@ -130,218 +124,310 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Alert Notifikasi Flash -->
 <?php if ($flashSukses): ?>
-    <div class="mb-5 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-2xl flex items-center justify-between shadow-xs">
-        <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+    <div style="margin-bottom: 20px; padding: 16px; background-color: #ECFDF5; border: 1px solid #BBF7D0; color: #166534; font-size: 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" style="flex-shrink: 0;">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" fill="#166534"/>
             </svg>
-            <span><?php echo e($flashSukses); ?></span>
+            <span style="font-weight: 500;"><?php echo e($flashSukses); ?></span>
         </div>
-        <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 font-bold">&times;</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <?php
+            $previousStatus = null;
+            switch ($currentStatus) {
+                case 'diproses':
+                    $previousStatus = 'diterima';
+                    break;
+                case 'selesai':
+                    $previousStatus = 'diproses';
+                    break;
+                case 'diambil':
+                    $previousStatus = 'selesai';
+                    break;
+                default:
+                    $previousStatus = null;
+            }
+            ?>
+            <?php if ($previousStatus): ?>
+                <form action="<?php echo $base; ?>pesanan/proses_undo" method="post" style="display: flex; align-items: center; gap: 6px;">
+                    <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+                    <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
+                    <button type="submit"
+                            style="color: #16A34A; font-weight: 700; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px;">
+                        Undo
+                    </button>
+                </form>
+            <?php endif; ?>
+            <button type="button" onclick="this.parentElement.remove()" style="color: #65A30D; font-weight: 700; cursor: pointer; padding: 4px;">&times;</button>
+        </div>
     </div>
 <?php endif; ?>
 
 <?php if ($flashError): ?>
-    <div class="mb-5 p-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-2xl flex items-center justify-between shadow-xs">
-        <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+    <div style="margin-bottom: 20px; padding: 16px; background-color: #FEF3C7; border: 1px solid #FCD34D; color: #92400E; font-size: 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" style="flex-shrink: 0;">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill="#92400E"/>
             </svg>
-            <span><?php echo e($flashError); ?></span>
+            <span style="font-weight: 500;"><?php echo e($flashError); ?></span>
         </div>
-        <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700 font-bold">&times;</button>
+        <button type="button" onclick="this.parentElement.remove()" style="color: #CA8A04; font-weight: 700; cursor: pointer; padding: 4px;">&times;</button>
     </div>
 <?php endif; ?>
 
-<!-- Konten Utama Rincian Pesanan (Sesuai UI/UX Designer Figma) -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+<!-- Konten Utama Rincian Pesanan (Layout 2 Kolom - inline CSS) -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
 
     <!-- Kolom Kiri: Ringkasan Layanan & Status Pengerjaan (Lebar 2/3) -->
-    <div class="lg:col-span-2 space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 24px;">
 
-        <!-- 1. Card Ringkasan Layanan (Lengkap dengan Ilustrasi Mesin Cuci & Tanaman) -->
-        <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-100 flex items-center justify-between">
-            <div class="space-y-2">
-                <!-- Pill Status Pesanan -->
-                <div>
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold <?php
-                        echo match ($currentStatus) {
-                            'selesai'  => 'bg-emerald-50 text-emerald-600 border border-emerald-200',
-                            'diproses' => 'bg-blue-50 text-[#0085ff] border border-blue-200',
-                            'diambil'  => 'bg-slate-100 text-slate-700 border border-slate-200',
-                            default    => 'bg-amber-50 text-amber-700 border border-amber-200',
-                        };
-                    ?>">
-                        <?php echo ucfirst($currentStatus); ?>
+        <!-- 1. Card Ringkasan Layanan -->
+        <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Badge Statis -->
+                <?php if ($currentStatus === 'diambil'): ?>
+                    <span style="display: inline-block; padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: 700; background-color: #ECFDF5; color: #15803D; border: 1px solid #BBF7D0;">
+                        Pesanan Selesai
                     </span>
-                </div>
+                <?php else: ?>
+                    <span style="display: inline-block; padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: 700; background-color: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD;">
+                        Proses Berjalan
+                    </span>
+                <?php endif; ?>
 
                 <!-- Nama Layanan -->
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">
+                <h1 style="font-size: 20px; font-weight: 700; color: #1F2937; line-height: 1.3; margin-top: 8px;">
                     <?php echo e($pesanan['nama_layanan'] ?: 'Cuci + Setrika'); ?>
                 </h1>
 
                 <!-- Subtitle Kode, Berat, & Tanggal -->
-                <p class="text-xs text-slate-400">
+                <p style="font-size: 12px; color: #9CA3AF; margin-top: 4px;">
                     <?php echo e($pesanan['kode_pesanan']); ?> · <?php echo (float) $pesanan['total_qty']; ?> kg · pesanan dibuat <?php echo date('d F Y', strtotime($pesanan['tanggal_pesan'])); ?>
                 </p>
             </div>
 
-            <!-- Ilustrasi Mesin Cuci Khas Fast Wash di Sebelah Kanan -->
-            <div class="shrink-0 hidden sm:block w-36 h-28">
-                <svg class="w-full h-full" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="80" cy="112" rx="70" ry="6" fill="#eaf3fe"/>
-                    <!-- Tanaman Kecil -->
-                    <rect x="18" y="92" width="12" height="14" rx="2" fill="#fbbf24"/>
-                    <path d="M24 92 C21 84, 14 86, 16 78 C18 85, 23 88, 24 92 Z" fill="#34d399"/>
-                    <path d="M24 92 C26 84, 34 86, 32 78 C30 85, 25 88, 24 92 Z" fill="#10b981"/>
-                    <!-- Mesin Cuci -->
-                    <rect x="48" y="32" width="58" height="74" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="3"/>
-                    <circle cx="77" cy="74" r="20" fill="#0085ff" stroke="#bae6fd" stroke-width="4"/>
-                    <circle cx="77" cy="74" r="12" fill="#0284c7"/>
-                    <path d="M71 68 A10 10 0 0 1 85 75" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
-                    <!-- Keranjang -->
-                    <path d="M115 72 L138 72 L134 104 L119 104 Z" fill="#bae6fd" stroke="#38bdf8" stroke-width="1.5"/>
-                    <circle cx="122" cy="68" r="5" fill="#fb7185"/>
-                    <circle cx="131" cy="67" r="6" fill="#fbbf24"/>
+            <!-- Ilustrasi Mesin Cuci & Keranjang (Right) -->
+            <div style="width: 96px; height: 96px; flex-shrink: 0;">
+                <svg width="96" height="96" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                    <rect x="8" y="10" width="144" height="100" rx="10" fill="#F0F9FF" stroke="#93C5FD" stroke-width="2"/>
+                    <rect x="8" y="10" width="144" height="12" rx="3" fill="#EFF6FF"/>
+                    <rect x="20" y="26" width="120" height="44" rx="6" fill="#FFFFFF" stroke="#93C5FD" stroke-width="2"/>
+                    <circle cx="80" cy="48" r="18" fill="#0085FF" stroke="#BBF7D0" stroke-width="4"/>
+                    <circle cx="80" cy="48" r="10" fill="#2563EB"/>
+                    <circle cx="80" cy="48" r="3" fill="#FFFFFF"/>
+                    <circle cx="80" cy="32" r="8" fill="#FFFFFF" stroke="#93C5FD" stroke-width="2"/>
+                    <rect x="100" y="48" width="52" height="40" rx="6" fill="#FFFFFF" stroke="#38BDF8" stroke-width="2"/>
+                    <circle cx="126" cy="56" r="6" fill="#F472B6"/>
+                    <circle cx="126" cy="56" r="2" fill="#FFFFFF"/>
+                    <circle cx="134" cy="54" r="5" fill="#F59E0B"/>
+                    <circle cx="134" cy="54" r="2" fill="#FFFFFF"/>
                 </svg>
             </div>
         </div>
 
-        <!-- 2. Card Status Pengerjaan (Stepper 5 Node: Diterima - Dicuti - Disetrika - Selesai - Diambil) -->
-        <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-100">
-            <div class="flex items-center justify-between pb-5 border-b border-slate-100 mb-8">
-                <h2 class="text-base font-bold text-slate-800">Status Pengerjaan</h2>
-                <!-- Pill Status Saat Ini di Kanan -->
-                <span class="px-4 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#0085ff] border border-blue-200">
+        <!-- 2. Card Status Pengerjaan -->
+        <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #F3F4F6; margin-bottom: 24px;">
+                <h2 style="font-size: 18px; font-weight: 700; color: #1F2937;">Status Pengerjaan</h2>
+                <span style="padding: 8px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; background-color: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD;">
                     <?php echo ucfirst($currentStatus); ?>
                 </span>
             </div>
 
-            <!-- Stepper Horizontal 5 Node -->
-            <div class="relative px-4 sm:px-8 mb-8">
-                <!-- Garis Penghubung Biru Antar Step -->
-                <div class="absolute top-5 left-10 right-10 h-1 bg-[#0085ff] z-0"></div>
-
-                <div class="grid grid-cols-5 relative z-10 gap-2">
+            <!-- Stepper Horizontal 4 Node -->
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin: 28px 0;">
+                <?php
+                // Definisikan 4 tahapan status
+                $stepNodes = [
+                    ['label' => 'Diterima', 'icon' => 'check'],
+                    ['label' => 'Diproses', 'icon' => 'camera'],
+                    ['label' => 'Selesai', 'icon' => 'box'],
+                    ['label' => 'Diambil', 'icon' => 'cube'],
+                ];
+                foreach ($stepNodes as $idx => $node): ?>
                     <?php
-                    $stepNodes = [
-                        ['label' => 'Diterima', 'icon' => 'check'],
-                        ['label' => 'Dicuti', 'icon' => 'camera'],
-                        ['label' => 'Disetrika', 'icon' => 'iron'],
-                        ['label' => 'Selesai', 'icon' => 'box'],
-                        ['label' => 'Diambil', 'icon' => 'cube'],
-                    ];
-                    foreach ($stepNodes as $idx => $node):
-                        $stepNum = $idx + 1;
-                        $isPast    = ($stepNum < $currentStepNum);
-                        $isCurrent = ($stepNum === $currentStepNum);
-                        $isDone    = $isPast || $isCurrent;
-                        $nodeClass = $isDone ? 'bg-[#0085ff] text-white' : 'bg-slate-300 text-white';
+                    $stepNum = $idx + 1;
+                    $isPast    = ($stepNum < $currentStepNum);
+                    $isCurrent = ($stepNum === $currentStepNum);
+                    $isDone    = $isPast || $isCurrent;
+
+                    // Circle styling - inline style only
+                    if ($isCurrent || $isPast) {
+                        $circleStyle = 'width: 40px; height: 40px; border-radius: 50%; background-color: #0088FF; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 3px solid #0088FF;';
+                        $textStyle   = 'margin-top: 8px; font-size: 13px; font-weight: 600; color: #1F2937;';
+                    } else {
+                        $circleStyle = 'width: 40px; height: 40px; border-radius: 50%; background-color: #FFFFFF; color: #9CA3AF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid #D1D5DB;';
+                        $textStyle   = 'margin-top: 8px; font-size: 13px; color: #9CA3AF;';
+                    }
                     ?>
-                        <div class="flex flex-col items-center text-center">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center ring-4 ring-white shadow-xs <?php echo $nodeClass; ?>">
-                                <?php if ($node['icon'] === 'check'): ?>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                <?php elseif ($node['icon'] === 'camera'): ?>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="13" r="4"/></svg>
-                                <?php elseif ($node['icon'] === 'iron'): ?>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
-                                <?php elseif ($node['icon'] === 'box'): ?>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                <?php else: ?>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                <?php endif; ?>
-                            </div>
-                            <span class="mt-2.5 text-xs font-semibold <?php echo $isDone ? 'text-slate-800' : 'text-slate-400'; ?>">
-                                <?php echo $node['label']; ?>
-                            </span>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="<?php echo $circleStyle; ?>">
+                            <?php if ($node['icon'] === 'check'): ?>
+                                <svg width="18" height="18" viewBox="0 0 24 24" style="display: block;">
+                                    <path d="M5 13l4 4L19 7" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            <?php elseif ($node['icon'] === 'camera'): ?>
+                                <svg width="18" height="18" viewBox="0 0 24 24" style="display: block;">
+                                    <rect x="4" y="2" width="16" height="20" rx="2" stroke="#9CA3AF" stroke-width="2.5"/>
+                                    <circle cx="12" cy="13" r="4" stroke="#9CA3AF" stroke-width="2.5"/>
+                                </svg>
+                            <?php elseif ($node['icon'] === 'box'): ?>
+                                <svg width="18" height="18" viewBox="0 0 24 24" style="display: block;">
+                                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="#9CA3AF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            <?php else: ?>
+                                <svg width="18" height="18" viewBox="0 0 24 24" style="display: block;">
+                                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="#9CA3AF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            <?php endif; ?>
                         </div>
-                    <?php endforeach; ?>
-                </div>
+                        <span style="<?php echo $textStyle; ?>">
+                            <?php echo $node['label']; ?>
+                        </span>
+                    </div>
+
+                    <!-- Connector line (between steps) -->
+                    <?php if ($idx < count($stepNodes) - 1): ?>
+                        <div style="flex: 1; height: 2px; margin-top: 19px; background-color: <?php echo $isDone ? '#0088FF' : '#E5E7EB'; ?>; min-width: 24px;"></div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             </div>
 
-            <!-- Tombol Lanjut ke Status Berikutnya -->
-            <?php if ($nextStatus): ?>
-                <form action="<?php echo $base; ?>pesanan/proses_edit" method="post" class="pt-4 border-t border-slate-100 flex justify-end">
-                    <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
-                    <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
-                    <input type="hidden" name="status_tujuan" value="<?php echo e($nextStatus); ?>">
-                    <button type="submit"
-                            onclick="return confirm('Ubah status pengerjaan pesanan menjadi <?php echo strtoupper($nextStatus); ?>?')"
-                            class="px-5 py-2.5 bg-[#0085ff] hover:bg-[#0070d8] text-white font-semibold text-xs rounded-2xl shadow-xs transition-colors flex items-center gap-2">
-                        <span><?php echo e($nextBtnLabel); ?></span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            <!-- Tombol Aksi -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
+                <?php
+                // Tentukan status sebelumnya
+                $previousStatus = null;
+                switch ($currentStatus) {
+                    case 'diproses':
+                        $previousStatus = 'diterima';
+                        break;
+                    case 'selesai':
+                        $previousStatus = 'diproses';
+                        break;
+                    case 'diambil':
+                        $previousStatus = 'selesai';
+                        break;
+                    default:
+                        $previousStatus = null;
+                }
+                ?>
+
+                <?php if ($currentStatus === 'diterima'): ?>
+                    <!-- Status Diterima: tombol biru penuh -->
+                    <form action="<?php echo $base; ?>pesanan/proses_edit" method="post">
+                        <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+                        <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
+                        <input type="hidden" name="status_tujuan" value="diproses">
+                        <button type="submit"
+                                style="flex: 1; padding: 12px 20px; border-radius: 12px; border: none; background-color: #0088FF; color: #FFFFFF; font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; transition: background-color 0.2s;">
+                            Ubah Ke Diproses
+                        </button>
+                    </form>
+
+                <?php elseif ($currentStatus === 'diambil'): ?>
+                    <!-- Status Diambil: tombol kembali + pesan selesai -->
+                    <?php if ($previousStatus): ?>
+                        <form action="<?php echo $base; ?>pesanan/proses_undo" method="post" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+                            <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
+                            <button type="submit"
+                                    onclick="return confirm('Kembalikan status pesanan ke tahap sebelumnya?')"
+                                    style="padding: 12px 18px; border-radius: 12px; border: 1px solid #D1D5DB; background-color: #FFFFFF; color: #4B5563; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background-color 0.2s;">
+                                <span style="color: #6B7280;">←</span>
+                                <span>Kembali ke <?php echo ucfirst($previousStatus); ?></span>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                    <div style="display: flex; align-items: center; gap: 8px; color: #15803D; font-weight: 600;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                            <path d="M5 13l4 4L19 7" stroke="#15803D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                    </button>
-                </form>
-            <?php else: ?>
-                <div class="pt-4 border-t border-slate-100 text-center text-xs font-semibold text-emerald-600 flex items-center justify-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    <span>Pesanan telah selesai dan diserahkan ke pelanggan</span>
-                </div>
-            <?php endif; ?>
+                        <span>✓ Pesanan telah selesai dan diserahkan ke pelanggan</span>
+                    </div>
+
+                <?php else: ?>
+                    <!-- Status Diproses/Selesai: Undo + tombol utama -->
+                    <?php if ($previousStatus): ?>
+                        <form action="<?php echo $base; ?>pesanan/proses_undo" method="post" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+                            <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
+                            <button type="submit"
+                                    onclick="return confirm('Kembalikan status pesanan ke tahap sebelumnya?')"
+                                    style="padding: 12px 18px; border-radius: 12px; border: 1px solid #D1D5DB; background-color: #FFFFFF; color: #4B5563; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background-color 0.2s;">
+                                <span style="color: #6B7280;">←</span>
+                                <span>Kembali ke <?php echo ucfirst($previousStatus); ?></span>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($nextStatus): ?>
+                        <form action="<?php echo $base; ?>pesanan/proses_edit" method="post" style="flex: 1;">
+                            <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+                            <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
+                            <input type="hidden" name="status_tujuan" value="<?php echo e($nextStatus); ?>">
+                            <button type="submit"
+                                    onclick="return confirm('Ubah status pengerjaan pesanan menjadi <?php echo strtoupper($nextStatus); ?>?')"
+                                    style="padding: 12px 20px; border-radius: 12px; border: none; background-color: #0088FF; color: #FFFFFF; font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; transition: background-color 0.2s;">
+                                Ubah Ke <?php echo ucfirst($nextStatus); ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
 
     </div>
 
-    <!-- Kolom Kanan: Detail Informasi Pesanan (Lebar 1/3 Sesuai Figma) -->
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-100 space-y-4">
-            <!-- Key-Value Sesuai Figma -->
-            <div class="space-y-3.5 text-xs text-slate-600 pb-2">
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400">Pelanggan</span>
-                    <span class="font-bold text-slate-800 text-sm"><?php echo e($pesanan['nama_pelanggan']); ?></span>
+    <!-- Kolom Kanan: Ringkasan Pesanan -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #9CA3AF;">Pelanggan</span>
+                    <span style="font-weight: 700; color: #1F2937; font-size: 13px;"><?php echo e($pesanan['nama_pelanggan']); ?></span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400">Layanan</span>
-                    <span class="font-semibold text-slate-700"><?php echo e($pesanan['nama_layanan'] ?: 'Cuci + Setrika'); ?></span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #9CA3AF;">Layanan</span>
+                    <span style="font-weight: 600; color: #374151; font-size: 13px;"><?php echo e($pesanan['nama_layanan'] ?: 'Cuci + Setrika'); ?></span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400">Berat</span>
-                    <span class="font-semibold text-slate-700"><?php echo (float) $pesanan['total_qty']; ?> kg</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #9CA3AF;">Berat</span>
+                    <span style="font-weight: 600; color: #374151; font-size: 13px;"><?php echo (float) $pesanan['total_qty']; ?> kg</span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400">Total</span>
-                    <span class="font-bold text-slate-800 text-sm">Rp <?php echo number_format((float) $pesanan['total_harga'], 0, ',', '.'); ?></span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #9CA3AF;">Total</span>
+                    <span style="font-weight: 700; color: #1F2937; font-size: 13px;">Rp <?php echo number_format((float) $pesanan['total_harga'], 0, ',', '.'); ?></span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400">Pembayaran</span>
-                    <span class="font-bold <?php echo $isLunas ? 'text-emerald-600' : 'text-amber-600'; ?>">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #9CA3AF;">Pembayaran</span>
+                    <span style="font-weight: 700; <?php echo $isLunas ? 'color: #15803D' : 'color: #F59E0B'; ?>; font-size: 13px;">
                         <?php echo e($metodeBayar); ?> - <?php echo $isLunas ? 'Lunas' : 'Belum Lunas'; ?>
                     </span>
                 </div>
             </div>
 
-            <!-- Tombol Konfirmasi Bayar jika belum lunas -->
             <?php if (!$isLunas): ?>
-                <form action="<?php echo $base; ?>transaksi/bayar" method="post" class="pt-2">
+                <form action="<?php echo $base; ?>transaksi/bayar" method="post" style="margin-top: 16px;">
                     <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
                     <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">
                     <input type="hidden" name="redirect" value="pesanan/detail?id=<?php echo (int) $pesanan['id_pesanan']; ?>">
                     <input type="hidden" name="metode" value="tunai">
                     <button type="submit"
-                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl transition-colors">
+                            style="width: 100%; padding: 12px 20px; border-radius: 12px; background-color: #10B981; color: #FFFFFF; font-weight: 700; font-size: 13px; cursor: pointer; transition: background-color 0.2s;">
                         Lunasi Sekarang
                     </button>
                 </form>
             <?php endif; ?>
 
-            <!-- Tombol Cetak Nota (Border Biru #0085ff Sesuai Figma) -->
-            <div class="pt-2">
+            <div style="margin-top: 16px;">
                 <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $pesanan['id_pesanan']; ?>"
-                   class="w-full py-3 px-4 border-2 border-[#0085ff] text-[#0085ff] hover:bg-blue-50 font-bold text-sm rounded-2xl transition-colors block text-center">
+                   style="display: block; width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #0088FF; color: #0088FF; font-weight: 700; font-size: 13px; text-align: center; cursor: pointer; transition: background-color 0.2s;">
                     Cetak Nota
                 </a>
             </div>
 
-            <!-- Link Navigasi Kembali ke Semua Pesanan -->
-            <div class="pt-1 text-center">
-                <a href="<?php echo $base; ?>pesanan" class="text-xs font-normal text-slate-400 hover:text-slate-700 transition-colors">
+            <div style="margin-top: 8px; text-align: center;">
+                <a href="<?php echo $base; ?>pesanan" style="font-size: 12px; color: #9CA3AF; font-weight: 400; text-decoration: none; transition: color 0.2s;">
                     Semua Pesanan
                 </a>
             </div>

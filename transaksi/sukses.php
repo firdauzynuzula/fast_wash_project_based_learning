@@ -46,72 +46,74 @@ $breadcrumb = [
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="max-w-md mx-auto my-6 sm:my-10">
-    <div class="bg-white rounded-3xl p-8 sm:p-10 shadow-xs border border-slate-100 text-center">
+<div style="max-width: 500px; margin: 24px auto;">
+    <div style="max-width: 460px; width: 100%; margin: 0 auto; padding: 24px 32px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); background-color: #FFFFFF; text-align: center;">
 
         <!-- Ikon Centang Biru Muda (Sesuai Desain Figma) -->
-        <div class="w-16 h-16 mx-auto rounded-full bg-[#eaf3fe] text-[#0085ff] flex items-center justify-center mb-5">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        <div style="width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background-color: #EAF3FE; color: #0085FF; display: flex; align-items: center; justify-content: center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" style="display: block;">
+                <path d="M5 13l4 4L19 7" stroke="#0085FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
 
         <!-- Judul Halaman -->
-        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Pesanan dibuat</h1>
+        <h1 style="font-size: 24px; font-weight: 700; color: #1F2937; line-height: 1.3; margin-bottom: 8px;">
+            Pesanan dibuat
+        </h1>
 
         <!-- Subtitle Info Pesanan -->
-        <p class="text-xs text-slate-400 mt-2">
-            <span class="font-semibold text-slate-600"><?php echo e($pesanan['kode_pesanan']); ?></span> for <?php echo e($pesanan['nama_pelanggan']); ?> | <?php echo e($pesanan['nama_layanan'] ?: 'Cuci'); ?> | <?php echo (float) $pesanan['total_qty']; ?> kg | Rp <?php echo number_format((float) $pesanan['total_harga'], 0, ',', '.'); ?>
+        <p style="font-size: 13px; color: #9CA3AF; margin-top: 4px;">
+            <span style="font-weight: 700; color: #374151;"><?php echo e($pesanan['kode_pesanan']); ?></span> for <?php echo e($pesanan['nama_pelanggan']); ?> | <?php echo e($pesanan['nama_layanan'] ?: 'Cuci'); ?> | <?php echo (float) $pesanan['total_qty']; ?> kg | Rp <?php echo number_format((float) $pesanan['total_harga'], 0, ',', '.'); ?>
         </p>
 
         <!-- Ilustrasi Mesin Cuci & Keranjang Laundry (Sesuai Desain Figma) -->
-        <div class="my-8 flex items-center justify-center">
-            <div class="relative w-44 h-36 flex items-center justify-center">
+        <div style="margin: 24px 0 28px; display: flex; align-items: center; justify-content: center;">
+            <div style="position: relative; width: 176px; height: 144px; display: flex; align-items: center; justify-content: center;">
                 <!-- Ilustrasi SVG Mesin Cuci, Keranjang & Tanaman -->
-                <svg class="w-full h-full" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="176" height="144" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
                     <!-- Meja / Lantai -->
-                    <ellipse cx="100" cy="148" rx="85" ry="8" fill="#eaf3fe"/>
+                    <ellipse cx="100" cy="148" rx="85" ry="8" fill="#EAF3FE"/>
 
                     <!-- Tanaman Kecil di Kiri -->
-                    <rect x="25" y="125" width="16" height="18" rx="3" fill="#fbbf24"/>
-                    <path d="M33 125 C30 115, 20 118, 22 108 C25 116, 32 120, 33 125 Z" fill="#34d399"/>
-                    <path d="M33 125 C36 115, 46 118, 44 108 C41 116, 34 120, 33 125 Z" fill="#10b981"/>
+                    <rect x="25" y="125" width="16" height="18" rx="3" fill="#FBBF24"/>
+                    <path d="M33 125 C30 115, 20 118, 22 108 C25 116, 32 120, 33 125 Z" fill="#34D399"/>
+                    <path d="M33 125 C36 115, 46 118, 44 108 C41 116, 34 120, 33 125 Z" fill="#10B981"/>
 
                     <!-- Mesin Cuci Utama (Tengah) -->
-                    <rect x="62" y="50" width="76" height="92" rx="14" fill="#ffffff" stroke="#93c5fd" stroke-width="4"/>
+                    <rect x="62" y="50" width="76" height="92" rx="14" fill="#FFFFFF" stroke="#93C5FD" stroke-width="4"/>
                     <!-- Panel Atas Mesin Cuci -->
-                    <rect x="70" y="58" width="60" height="10" rx="3" fill="#f1f5f9"/>
-                    <circle cx="118" cy="63" r="2.5" fill="#38bdf8"/>
-                    <circle cx="124" cy="63" r="2.5" fill="#0085ff"/>
+                    <rect x="70" y="58" width="60" height="10" rx="3" fill="#F1F5F9"/>
+                    <circle cx="118" cy="63" r="2.5" fill="#38BDF8"/>
+                    <circle cx="124" cy="63" r="2.5" fill="#0085FF"/>
                     <!-- Pintu Kaca Mesin Cuci -->
-                    <circle cx="100" cy="102" r="26" fill="#0085ff" stroke="#bae6fd" stroke-width="5"/>
-                    <circle cx="100" cy="102" r="16" fill="#0284c7"/>
-                    <path d="M92 94 A14 14 0 0 1 112 104" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="100" cy="102" r="26" fill="#0085FF" stroke="#BAE6FD" stroke-width="5"/>
+                    <circle cx="100" cy="102" r="16" fill="#2563EB"/>
+                    <path d="M92 94 A14 14 0 0 1 112 104" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
 
                     <!-- Keranjang Laundry di Kanan -->
-                    <path d="M148 100 L176 100 L171 140 L153 140 Z" fill="#bae6fd" stroke="#38bdf8" stroke-width="2"/>
-                    <line x1="152" y1="108" x2="155" y2="135" stroke="#0085ff" stroke-width="1.5"/>
-                    <line x1="162" y1="108" x2="162" y2="135" stroke="#0085ff" stroke-width="1.5"/>
-                    <line x1="172" y1="108" x2="169" y2="135" stroke="#0085ff" stroke-width="1.5"/>
+                    <path d="M148 100 L176 100 L171 140 L153 140 Z" fill="#BAE6FD" stroke="#38BDF8" stroke-width="2"/>
+                    <line x1="152" y1="108" x2="155" y2="135" stroke="#0085FF" stroke-width="1.5"/>
+                    <line x1="162" y1="108" x2="162" y2="135" stroke="#0085FF" stroke-width="1.5"/>
+                    <line x1="172" y1="108" x2="169" y2="135" stroke="#0085FF" stroke-width="1.5"/>
                     <!-- Pakaian Menumpuk di Keranjang -->
-                    <circle cx="156" cy="95" r="7" fill="#fb7185"/>
-                    <circle cx="168" cy="94" r="8" fill="#fbbf24"/>
-                    <circle cx="162" cy="88" r="7" fill="#818cf8"/>
+                    <circle cx="156" cy="95" r="7" fill="#FB7185"/>
+                    <circle cx="168" cy="94" r="8" fill="#FBBF24"/>
+                    <circle cx="162" cy="88" r="7" fill="#818CF8"/>
                 </svg>
             </div>
         </div>
 
         <!-- 2 Tombol Aksi Sesuai Figma -->
-        <div class="space-y-3">
-            <!-- Tombol 1: Lihat Pesanan (Solid Biru #0085ff) -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Tombol 1: Lihat Pesanan (Solid Biru #0088FF) -->
             <a href="<?php echo $base; ?>transaksi/detail?id=<?php echo (int) $pesanan['id_pesanan']; ?>"
-               class="w-full py-3.5 px-4 bg-[#0085ff] hover:bg-[#0070d8] text-white font-bold text-sm rounded-2xl shadow-xs transition-colors block text-center">
+               style="width: 100%; padding: 14px 20px; background-color: #0088FF; color: #FFFFFF; font-weight: 700; font-size: 14px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background-color 0.2s; display: block; text-align: center; cursor: pointer;">
                 Lihat Pesanan
             </a>
 
-            <!-- Tombol 2: Buat Pesanan Baru (Biru Muda #eaf3fe) -->
+            <!-- Tombol 2: Buat Pesanan Baru (Biru Muda #E6F3FF / #DBEAFE) -->
             <a href="<?php echo $base; ?>transaksi/tambah"
-               class="w-full py-3.5 px-4 bg-[#eaf3fe] hover:bg-blue-100 text-[#0085ff] font-bold text-sm rounded-2xl transition-colors block text-center">
+               style="width: 100%; padding: 14px 20px; background-color: #E6F3FF; color: #0088FF; font-weight: 700; font-size: 14px; border-radius: 12px; border: 1px solid #93C5FD; transition: background-color 0.2s; display: block; text-align: center; cursor: pointer;">
                 Buat Pesanan Baru
             </a>
         </div>
