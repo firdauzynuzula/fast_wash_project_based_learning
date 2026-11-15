@@ -6,12 +6,9 @@ services:
     restart: unless-stopped
     expose:
       - "80"
-    networks:
-      - default
-      - coolify
     environment:
-      - DB_HOST=${DB_HOST:-db}
-      - DB_PORT=${DB_PORT:-5432}
+      - DB_HOST=db
+      - DB_PORT=5432
       - DB_NAME=${DB_NAME:-fast_wash_staging}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASS=${DB_PASS:-staging_secret_pass}
@@ -22,8 +19,25 @@ services:
       - BREVO_API_KEY=${BREVO_API_KEY:-}
       - MAIL_FROM_EMAIL=${MAIL_FROM_EMAIL:-support@gapunyaide.web.id}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Fast Wash Official}
+    depends_on:
+      db:
+        condition: service_healthy
 
-networks:
-  default:
-  coolify:
-    external: true
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fast_wash_staging}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-staging_secret_pass}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  pgdata_staging:
