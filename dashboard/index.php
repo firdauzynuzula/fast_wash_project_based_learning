@@ -1,83 +1,193 @@
 <?php
 /**
- * Fast Wash - Halaman Dasbor Karyawan & Pemilik
- * Sesuai desain Figma (Dashboard-Karyawan.png)
+ * Fast Wash - Dashboard
+ * Data diambil langsung dari PostgreSQL.
  */
 $title = 'Dasbor';
-$tanpaDb = true;
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// Data Contoh Mockup Sesuai Kolom Database & View v_dasbor_hari_ini
-$userName = $_SESSION['nama'] ?? 'Rani';
-$hariIniIndonesia = [
-    'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
-    'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
-][date('l')] . ', ' . date('d F Y');
+// Nama pengguna yang sedang login
+$userName = $_SESSION['nama'] ?? 'Admin';
 
-// 4 Kartu Metrik KPI (v_dasbor_hari_ini)
+// Tanggal Indonesia
+$namaHari = [
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
+];
+
+$namaBulan = [
+    1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+    4 => 'April', 5 => 'Mei', 6 => 'Juni',
+    7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+    10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+];
+
+$hariIniIndonesia = $namaHari[date('l')] . ', '
+    . date('d') . ' ' . $namaBulan[(int) date('n')] . ' ' . date('Y');
+
+// Nilai awal jika pengambilan data gagal
 $metrik = [
-    'pesanan_hari_ini'   => 14,
-    'selisih_kemarin'    => '+3 dari kemarin',
-    'sedang_diproses'    => 6,
-    'info_proses'        => '2 layanan cepat',
-    'siap_diambil'       => 4,
-    'info_siap'          => '1 menunggu bayar',
-    'jam_kerja'          => '5j 42m',
-    'jam_masuk'          => 'Check-in 07:58',
+    'pesanan_hari_ini' => 0,
+    'selisih_kemarin' => 'Belum ada perbandingan',
+    'sedang_diproses' => 0,
+    'info_proses' => 'Pesanan dalam proses',
+    'siap_diambil' => 0,
+    'info_siap' => 'Menunggu pengambilan',
+    'jam_kerja' => '—',
+    'jam_masuk' => 'Login admin'
 ];
 
-// Antrian Pengerjaan Terbaru (v_pesanan_terbaru)
-$antrianPengerjaan = [
-    [
-        'id_pesanan'     => 1,
-        'kode_pesanan'   => '#FW24042',
-        'nama_pelanggan' => 'Nadya Alya',
-        'layanan'        => 'Cuci + Setrika',
-        'berat_kg'       => 3,
-        'status'         => 'diproses',
-        'badge_label'    => 'Diproses',
-        'badge_class'    => 'bg-blue-50 text-blue-600 border border-blue-100',
-    ],
-    [
-        'id_pesanan'     => 2,
-        'kode_pesanan'   => '#FW24041',
-        'nama_pelanggan' => 'Sarah Amanda',
-        'layanan'        => 'Cuci Kering',
-        'berat_kg'       => 2,
-        'status'         => 'selesai',
-        'badge_label'    => 'Selesai',
-        'badge_class'    => 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-    ],
-    [
-        'id_pesanan'     => 3,
-        'kode_pesanan'   => '#FW24039',
-        'nama_pelanggan' => 'Rizky Pratama',
-        'layanan'        => 'Cuci + Setrika',
-        'berat_kg'       => 4,
-        'status'         => 'diproses',
-        'badge_label'    => 'Diproses',
-        'badge_class'    => 'bg-blue-50 text-blue-600 border border-blue-100',
-    ],
-    [
-        'id_pesanan'     => 4,
-        'kode_pesanan'   => '#FW24038',
-        'nama_pelanggan' => 'Dimas Aditya',
-        'layanan'        => 'Cuci Kering',
-        'berat_kg'       => 6,
-        'status'         => 'diterima',
-        'badge_label'    => 'Diterima',
-        'badge_class'    => 'bg-slate-100 text-slate-600 border border-slate-200',
-    ],
-];
+$antrianPengerjaan = [];
 
-// Data Presensi Hari Ini (absensi)
 $presensiHariIni = [
-    'jam_masuk'  => '07:58',
+    'jam_masuk' => '--:--',
     'jam_pulang' => '--:--',
-    'status'     => 'hadir',
+    'status' => 'Belum terhubung ke akun karyawan'
 ];
+
+try {
+    // Mengambil statistik pesanan hari ini dan kemarin
+    $sqlMetrik = "
+        SELECT
+            COUNT(*) FILTER (
+                WHERE tanggal_pesan::date = CURRENT_DATE
+            ) AS pesanan_hari_ini,
+
+            COUNT(*) FILTER (
+                WHERE tanggal_pesan::date = CURRENT_DATE - 1
+            ) AS pesanan_kemarin,
+
+            COUNT(*) FILTER (
+                WHERE status IN ('diproses', 'dicuci')
+            ) AS sedang_diproses,
+
+            COUNT(*) FILTER (
+                WHERE status = 'selesai'
+            ) AS siap_diambil,
+
+            COUNT(*) FILTER (
+                WHERE status = 'selesai'
+                AND status_bayar <> 'lunas'
+            ) AS belum_lunas
+
+        FROM pesanan
+    ";
+
+    $dataMetrik = $pdo->query($sqlMetrik)->fetch();
+
+    $hariIni = (int) $dataMetrik['pesanan_hari_ini'];
+    $kemarin = (int) $dataMetrik['pesanan_kemarin'];
+    $selisih = $hariIni - $kemarin;
+
+    $metrik['pesanan_hari_ini'] = $hariIni;
+    $metrik['selisih_kemarin'] =
+        ($selisih > 0 ? '+' : '') . $selisih . ' dari kemarin';
+
+    $metrik['sedang_diproses'] =
+        (int) $dataMetrik['sedang_diproses'];
+
+    $metrik['siap_diambil'] =
+        (int) $dataMetrik['siap_diambil'];
+
+    $metrik['info_siap'] =
+        (int) $dataMetrik['belum_lunas'] . ' belum lunas';
+
+    // Mengambil empat pesanan terbaru beserta pelanggan dan layanan
+    $sqlAntrian = "
+        SELECT
+            p.id_pesanan,
+            p.kode_pesanan,
+            p.status,
+            pl.nama AS nama_pelanggan,
+
+            COALESCE(
+                STRING_AGG(DISTINCT l.nama_layanan, ', '),
+                'Belum ada layanan'
+            ) AS layanan,
+
+            COALESCE(SUM(dp.qty), 0) AS jumlah,
+
+            COALESCE(
+                STRING_AGG(DISTINCT l.satuan, ', '),
+                ''
+            ) AS satuan
+
+        FROM pesanan p
+
+        LEFT JOIN pelanggan pl
+            ON p.id_pelanggan = pl.id_pelanggan
+
+        LEFT JOIN detail_pesanan dp
+            ON p.id_pesanan = dp.id_pesanan
+
+        LEFT JOIN layanan l
+            ON dp.id_layanan = l.id_layanan
+
+        GROUP BY
+            p.id_pesanan,
+            p.kode_pesanan,
+            p.status,
+            p.tanggal_pesan,
+            pl.nama
+
+        ORDER BY p.tanggal_pesan DESC
+        LIMIT 4
+    ";
+
+    $antrianPengerjaan = $pdo->query($sqlAntrian)->fetchAll();
+
+    // Label dan warna status pesanan
+    $daftarStatus = [
+        'pending' => [
+            'label' => 'Pending',
+            'class' => 'bg-amber-50 text-amber-600 border border-amber-100'
+        ],
+        'diterima' => [
+            'label' => 'Diterima',
+            'class' => 'bg-slate-100 text-slate-600 border border-slate-200'
+        ],
+        'diproses' => [
+            'label' => 'Diproses',
+            'class' => 'bg-blue-50 text-blue-600 border border-blue-100'
+        ],
+        'dicuci' => [
+            'label' => 'Dicuci',
+            'class' => 'bg-cyan-50 text-cyan-600 border border-cyan-100'
+        ],
+        'selesai' => [
+            'label' => 'Selesai',
+            'class' => 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+        ],
+        'diambil' => [
+            'label' => 'Diambil',
+            'class' => 'bg-purple-50 text-purple-600 border border-purple-100'
+        ]
+    ];
+
+    foreach ($antrianPengerjaan as &$item) {
+        $status = $item['status'];
+
+        $item['badge_label'] =
+            $daftarStatus[$status]['label'] ?? ucfirst($status);
+
+        $item['badge_class'] =
+            $daftarStatus[$status]['class']
+            ?? 'bg-slate-100 text-slate-600 border border-slate-200';
+    }
+    unset($item);
+
+} catch (PDOException $e) {
+    error_log('Dashboard Fast Wash: ' . $e->getMessage());
+    $_SESSION['flash_error'] =
+        'Data dashboard gagal dimuat. Periksa koneksi dan struktur database.';
+}
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -184,7 +294,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="truncate">
                                 <p class="text-sm font-bold text-slate-800 truncate"><?php echo e($item['nama_pelanggan']); ?></p>
                                 <p class="text-xs text-slate-400 truncate">
-                                    <span class="font-medium text-slate-600"><?php echo e($item['kode_pesanan']); ?></span> &middot; <?php echo e($item['layanan']); ?> &middot; <?php echo $item['berat_kg']; ?> kg
+                                    <span class="font-medium text-slate-600"><?php echo e($item['kode_pesanan']); ?></span>
+&middot; <?php echo e($item['layanan']); ?>
+&middot; <?php echo e($item['jumlah']); ?> <?php echo e($item['satuan']); ?>
                                 </p>
                             </div>
                         </div>

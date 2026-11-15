@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS pesanan (
     status_bayar        VARCHAR(20)   NOT NULL DEFAULT 'belum_lunas',
     catatan             VARCHAR(255),
     CONSTRAINT chk_pesanan_status
-        CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil', 'pending')),
+        CHECK (status IN ('diterima', 'diproses',  'selesai', 'diambil', 'pending')),
     CONSTRAINT chk_pesanan_status_bayar
         CHECK (status_bayar IN ('belum_lunas', 'sebagian', 'lunas'))
 );
