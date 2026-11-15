@@ -85,6 +85,100 @@ $pelanggan = [
 @keyframes cfPopIn { from {opacity:0;transform:translateY(5px) scale(.97)} to {opacity:1;transform:translateY(0) scale(1)} }
 @media(max-width:900px) { .customer-figma .cf-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .customer-figma .cf-tools { grid-template-columns:minmax(160px,1fr) 1fr; } }
 @media(max-width:560px) { .customer-figma .cf-intro { align-items:flex-start; flex-direction:column; } .customer-figma .cf-heading { font-size:20px; } .customer-figma .cf-stats { gap:9px; } .customer-figma .cf-stat { padding:11px; min-height:90px; } .customer-figma .cf-tools { grid-template-columns:1fr; } .customer-figma .cf-panel-head { align-items:flex-start; } .customer-figma .cf-foot { align-items:flex-start; flex-direction:column; } }
+
+.cf-control select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: none !important;
+}
+
+/* Penyesuaian ukuran tampilan halaman pelanggan */
+.customer-figma {
+    max-width: 100%;
+}
+
+.customer-figma .cf-eyebrow {
+    font-size: 13px;
+}
+
+.customer-figma .cf-heading {
+    font-size: 26px;
+}
+
+.customer-figma .cf-subtitle {
+    font-size: 15px;
+}
+
+.customer-figma .cf-add {
+    font-size: 14px;
+    padding: 12px 18px;
+}
+
+.customer-figma .cf-stats {
+    gap: 16px;
+}
+
+.customer-figma .cf-stat {
+    min-height: 115px;
+    padding: 17px;
+}
+
+.customer-figma .cf-stat-top {
+    font-size: 13px;
+}
+
+.customer-figma .cf-stat-icon {
+    width: 34px;
+    height: 34px;
+}
+
+.customer-figma .cf-stat-value {
+    font-size: 26px;
+}
+
+.customer-figma .cf-stat-note {
+    font-size: 12px;
+}
+
+.customer-figma .cf-panel-title {
+    font-size: 15px;
+}
+
+.customer-figma .cf-count {
+    font-size: 11px;
+}
+
+.customer-figma .cf-tools {
+    grid-template-columns: minmax(180px, 1fr) 160px 170px auto;
+    gap: 10px;
+}
+
+.customer-figma .cf-control {
+    height: 40px;
+    font-size: 13px;
+}
+
+.customer-figma th {
+    padding: 13px 15px;
+    font-size: 12px;
+}
+
+.customer-figma td {
+    padding: 12px 15px;
+    font-size: 12px;
+}
+
+.customer-figma .cf-foot {
+    font-size: 12px;
+}
+
+.customer-figma .cf-page {
+    min-width: 28px;
+    height: 28px;
+    font-size: 12px;
+}
+
 </style>
 
 <div class="customer-figma">
@@ -110,9 +204,26 @@ $pelanggan = [
             <span class="cf-count">142 profil aktif</span>
         </div>
         <div class="cf-tools">
-            <label class="cf-control"><span>⌕</span><input id="cfSearch" type="search" placeholder="Cari Nama Pelanggan / Kode Pesanan"><span>⌄</span></label>
-            <label class="cf-control"><select id="cfOrder"><option value="">Total Pesanan</option><option value="desc">Terbanyak</option><option value="asc">Paling sedikit</option></select><span>⌄</span></label>
-            <label class="cf-control"><select id="cfSpend"><option value="">Total Pengeluaran</option><option value="desc">Terbesar</option><option value="asc">Terkecil</option></select><span>⌄</span></label>
+            <label class="cf-control"><span>⌕</span><input id="cfSearch" type="search" placeholder="Cari Nama Pelanggan / Kode Pesanan"><span></span></label>
+            
+
+<label class="cf-control">
+    <select id="cfOrder" style="appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image:none;">
+        <option value="">Total Pesanan</option>
+        <option value="desc">Terbanyak</option>
+        <option value="asc">Paling sedikit</option>
+    </select>
+    <span></span>
+</label>
+
+<label class="cf-control">
+    <select id="cfSpend" style="appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image:none;">
+        <option value="">Total Pengeluaran</option>
+        <option value="desc">Terbesar</option>
+        <option value="asc">Terkecil</option>
+    </select>
+    <span></span>
+</label>
             <button class="cf-control cf-export" type="button" onclick="cfExport()">⇩ Export</button>
         </div>
         <div class="cf-table-wrap">
