@@ -1,14 +1,15 @@
 <?php
 /**
  * Fast Wash - Komponen Sidebar Navigasi Admin & Karyawan
- * Sesuai desain Figma (Header.png & Sidebar.png)
+ * Sesuai desain Figma (Header.png & Sidebar.png & Dokumen Pemilik)
  */
 $base = $base ?? './';
 $currentRoute = $route ?? '';
-$userRole = $_SESSION['role'] ?? 'karyawan';
-$userName = $_SESSION['nama'] ?? ($userRole === 'pemilik' || $userRole === 'admin' ? 'Pemilik' : 'Karyawan');
-$userEmail = $_SESSION['email'] ?? ($userRole === 'pemilik' || $userRole === 'admin' ? 'owner@fastwash.com' : 'fastwash@gmail.com');
-$userInitial = strtoupper(substr(trim($userName), 0, 1) ?: 'K');
+$userRole = $userRole ?? ($_SESSION['role'] ?? 'karyawan');
+$isPemilik = ($userRole === 'pemilik' || $userRole === 'admin');
+$userName = $isPemilik ? 'Akun Pemilik' : ($_SESSION['nama'] ?? 'Karyawan');
+$userEmail = $isPemilik ? 'fastwash@gmail.com' : ($_SESSION['email'] ?? 'fastwash@gmail.com');
+$userInitial = $isPemilik ? 'F' : strtoupper(substr(trim($userName), 0, 1) ?: 'K');
 
 // Helper penentu menu aktif
 $isMenu = function (array $prefixes) use ($currentRoute) {
@@ -113,13 +114,28 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="2" y="5" width="20" height="14" rx="2"/>
-                    <line x1="2" y1="10" x2="22" y2="10"/>
+                    <rect x="2.5" y="5" width="19" height="14" rx="2.5"/>
+                    <path d="M2.5 10h19"/>
                 </svg>
                 <span>Pembayaran</span>
             </a>
 
-            <!-- 5. Absensi -->
+            <!-- 5. Laporan (Khusus Pemilik / Admin) -->
+            <?php if ($isPemilik): ?>
+            <?php $act = $isMenu(['laporan']); ?>
+            <a href="<?php echo $base; ?>laporan"
+               class="<?php echo $act
+                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
+               <?php if ($act) echo 'aria-current="page"'; ?>>
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m7 15 4-5 3 3 5-6"/>
+                </svg>
+                <span>Laporan</span>
+            </a>
+            <?php else: ?>
+            <!-- 5. Absensi (Khusus Karyawan) -->
             <?php $act = $isMenu(['absensi']); ?>
             <a href="<?php echo $base; ?>absensi"
                class="<?php echo $act
@@ -127,14 +143,13 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 16l2 2 4-4"/>
+                    <rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/>
+                    <path d="M8 2.5v4M16 2.5v4M3 10h18"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.5 15.5 2 2 3.5-4"/>
                 </svg>
                 <span>Absensi</span>
             </a>
+            <?php endif; ?>
 
             <!-- 6. Log Aktivitas -->
             <?php $act = $isMenu(['log-activity']); ?>
@@ -144,9 +159,9 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9"/>
-                    <polyline points="12 7 12 12 15 15"/>
-                    <path d="M3.05 11a9 9 0 0 1 .5-2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 3.5v5h5"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5V12l3 2"/>
                 </svg>
                 <span>Log Aktivitas</span>
             </a>
@@ -159,7 +174,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
 
         <!-- Kartu Profil Pengguna -->
         <div class="bg-[#eaf3fe] p-3 rounded-2xl flex items-center gap-3">
-            <span class="w-10 h-10 rounded-full bg-[#a6d5ff] flex items-center justify-center text-[#0077e6] font-bold text-base shrink-0">
+            <span class="w-10 h-10 rounded-full bg-[#cbe4fc] flex items-center justify-center text-[#0085ff] font-bold text-base shrink-0">
                 <?php echo e($userInitial); ?>
             </span>
             <div class="flex-1 min-w-0">
@@ -171,8 +186,10 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
         <!-- Tombol Keluar / Logout -->
         <a href="<?php echo $base; ?>auth/logout"
            class="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-500 hover:text-red-600 transition-colors rounded-xl hover:bg-red-50">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
             <span>Keluar</span>
         </a>

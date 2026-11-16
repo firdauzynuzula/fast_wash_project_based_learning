@@ -38,6 +38,9 @@ $routes = [
     'pembayaran/index'        => 'pembayaran/index.php',
     'pembayaran/riwayat'      => 'pembayaran/riwayat.php',
 
+    'laporan/index'           => 'laporan/index.php',
+    'laporan'                 => 'laporan/index.php',
+
     'absensi'                 => 'absensi/index.php',
     'absensi/index'           => 'absensi/index.php',
 

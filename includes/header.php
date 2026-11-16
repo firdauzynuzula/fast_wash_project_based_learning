@@ -5,10 +5,11 @@
  * komponen sidebar, dan Top Header Bar (Top-bar.png).
  */
 $base = $base ?? './';
-$userRole = $_SESSION['role'] ?? 'karyawan';
-$userName = $_SESSION['nama'] ?? ($userRole === 'pemilik' || $userRole === 'admin' ? 'Pemilik' : 'Karyawan');
-$userRoleLabel = ($userRole === 'pemilik' || $userRole === 'admin') ? 'Pemilik' : 'Karyawan';
-$userInitial = strtoupper(substr(trim($userName), 0, 1) ?: 'K');
+$userRole = $userRole ?? ($_SESSION['role'] ?? 'karyawan');
+$isPemilik = ($userRole === 'pemilik' || $userRole === 'admin');
+$userName = $isPemilik ? 'Akun Pemilik' : ($_SESSION['nama'] ?? 'Karyawan');
+$userRoleLabel = $isPemilik ? 'Pemilik' : 'Karyawan';
+$userInitial = $isPemilik ? 'F' : strtoupper(substr(trim($userName), 0, 1) ?: 'K');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -18,6 +19,11 @@ $userInitial = strtoupper(substr(trim($userName), 0, 1) ?: 'K');
     <title>Fast Wash<?php echo isset($title) ? ' — ' . e($title) : ''; ?></title>
     <!-- Stylesheet Tailwind CSS v4 & Flowbite terkompilasi (dengan Cache Busting) -->
     <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
+    <?php if (!empty($extra_css)): ?>
+        <?php foreach ((array) $extra_css as $css): ?>
+            <link rel="stylesheet" href="<?php echo asset_url($css); ?>">
+        <?php endforeach; ?>
+    <?php endif; ?>
 </head>
 <body class="bg-[#EFF6FF] font-sans text-slate-800 antialiased h-screen overflow-hidden">
 
@@ -53,9 +59,9 @@ $userInitial = strtoupper(substr(trim($userName), 0, 1) ?: 'K');
                                     </svg>
                                 <?php endif; ?>
                                 <?php if (!empty($bc['url'])): ?>
-                                    <a href="<?php echo $base . $bc['url']; ?>" class="hover:text-[#0085ff] transition-colors"><?php echo e($bc['label']); ?></a>
+                                    <a href="<?php echo $base . $bc['url']; ?>" class="text-[#0085ff] font-medium hover:underline transition-colors"><?php echo e($bc['label']); ?></a>
                                 <?php else: ?>
-                                    <span class="text-slate-800 font-semibold"><?php echo e($bc['label']); ?></span>
+                                    <span class="text-slate-700 font-medium"><?php echo e($bc['label']); ?></span>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         </nav>
@@ -79,7 +85,7 @@ $userInitial = strtoupper(substr(trim($userName), 0, 1) ?: 'K');
                     <!-- Pill Badge Profil Pengguna (Top-bar.png) -->
                     <div class="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 bg-white rounded-full border border-blue-100 shadow-xs">
                         <div class="relative w-8 h-8 rounded-full bg-[#0085ff] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                            <?php echo e($userInitial); ?>
+                            <span><?php echo e($userInitial); ?></span>
                             <!-- Titik Hijau Status Aktif -->
                             <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white"></span>
                         </div>
