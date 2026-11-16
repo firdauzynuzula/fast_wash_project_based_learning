@@ -356,3 +356,99 @@ function buat_token_reset_password(PDO $pdo, string $email): ?array
         return null;
     }
 }
+
+/**
+ * Validasi token reset kata sandi dari database.
+ * Memastikan token belum kedaluwarsa (< 1 jam), belum pernah dipakai (waktu_dipakai IS NULL),
+ * dan pengguna pemilik/karyawan berstatus aktif.
+ *
+ * @return array{id_reset_password: int, id_pengguna: int, email: string, role: string, nama: string}|null
+ */
+function validasi_token_reset(PDO $pdo, string $token): ?array
+{
+    $token = trim($token);
+    if ($token === '') {
+        return null;
+    }
+
+    $tokenHash = hash('sha256', $token);
+
+    $sql = "SELECT r.id_reset_password, r.id_pengguna, r.waktu_kadaluarsa, r.waktu_dipakai,
+                   u.email, u.role, u.is_active,
+                   v.nama
+              FROM reset_password r
+              JOIN pengguna u ON u.id_pengguna = r.id_pengguna
+              LEFT JOIN v_login_identitas v ON v.id_pengguna = u.id_pengguna
+             WHERE r.token_hash = :hash
+               AND r.waktu_dipakai IS NULL
+               AND r.waktu_kadaluarsa > NOW()
+               AND u.is_active = TRUE
+               AND u.role IN ('pemilik', 'karyawan')
+             LIMIT 1";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':hash' => $tokenHash]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        return null;
+    }
+
+    return [
+        'id_reset_password' => (int) $row['id_reset_password'],
+        'id_pengguna'      => (int) $row['id_pengguna'],
+        'email'            => (string) $row['email'],
+        'role'             => (string) $row['role'],
+        'nama'             => (string) ($row['nama'] ?? $row['email']),
+    ];
+}
+
+/**
+ * Perbarui kata sandi akun via token reset secara atomik:
+ * 1. Mengubah password_hash di tabel pengguna.
+ * 2. Menandai waktu_dipakai = NOW() pada token di tabel reset_password (single-use).
+ * 3. Memutuskan seluruh sesi aktif lama di tabel sesi_login.
+ */
+function perbarui_kata_sandi_reset(PDO $pdo, string $token, string $passwordBaru): bool
+{
+    if (strlen($passwordBaru) < 8) {
+        return false;
+    }
+
+    $tokenData = validasi_token_reset($pdo, $token);
+    if (!$tokenData) {
+        return false;
+    }
+
+    $idPengguna      = $tokenData['id_pengguna'];
+    $idResetPassword = $tokenData['id_reset_password'];
+    $newHash         = password_hash($passwordBaru, PASSWORD_BCRYPT);
+
+    try {
+        $pdo->beginTransaction();
+
+        // 1. Update password di tabel pengguna
+        $stmtUser = $pdo->prepare("UPDATE pengguna SET password_hash = :hash WHERE id_pengguna = :id");
+        $stmtUser->execute([
+            ':hash' => $newHash,
+            ':id'   => $idPengguna,
+        ]);
+
+        // 2. Tandai token sudah digunakan (single-use)
+        $stmtReset = $pdo->prepare("UPDATE reset_password SET waktu_dipakai = NOW() WHERE id_reset_password = :id");
+        $stmtReset->execute([':id' => $idResetPassword]);
+
+        // 3. Putuskan semua sesi aktif lama di tabel sesi_login
+        $stmtSesi = $pdo->prepare("UPDATE sesi_login SET waktu_logout = NOW() WHERE id_pengguna = :id AND waktu_logout IS NULL");
+        $stmtSesi->execute([':id' => $idPengguna]);
+
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Gagal memperbarui kata sandi via token: " . $e->getMessage());
+        return false;
+    }
+}
