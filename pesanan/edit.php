@@ -14,7 +14,6 @@ $stmtPesanan = $pdo->prepare(
     "SELECT p.*,
             pl.nama AS nama_pelanggan,
             pl.no_telepon AS no_pelanggan,
-            pl.alamat AS alamat_pelanggan,
             k.nama AS nama_karyawan,
             (SELECT string_agg(l.nama_layanan, ', ')
                FROM detail_pesanan d

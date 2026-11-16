@@ -9,7 +9,7 @@ $breadcrumb = [
 ];
 
 // Ambil daftar pelanggan terdaftar
-$stmtPelanggan = $pdo->query("SELECT id_pelanggan, nama, no_telepon, alamat FROM pelanggan ORDER BY nama ASC");
+$stmtPelanggan = $pdo->query("SELECT id_pelanggan, nama, no_telepon FROM pelanggan ORDER BY nama ASC");
 $pelanggan = $stmtPelanggan->fetchAll();
 
 // Ambil daftar layanan aktif yang unik

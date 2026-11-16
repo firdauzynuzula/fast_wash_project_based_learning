@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS pelanggan (
     id_pelanggan    SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
+    alamat          TEXT,
     tanggal_daftar  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
