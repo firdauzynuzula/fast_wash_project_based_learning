@@ -1,11 +1,13 @@
 <?php
 /**
- * Fast Wash - Daftar Pembayaran (Pemilik)
+ * Fast Wash - Daftar Pembayaran
  * Sesuai desain Figma (Fast Wash - Pembayaran (Pemilik).png)
  */
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/auth.php';
+
 $title = 'Daftar Pembayaran';
 $route = $route ?? 'pembayaran';
-$userRole = $_SESSION['role'] ?? 'pemilik';
 
 // Data contoh pembayaran (sesuai spesifikasi & mockup Figma)
 $pembayaran = [
@@ -49,8 +51,6 @@ $breadcrumb = [
 
 $extra_css = 'assets/css/pembayaran-dan-laporan.css';
 
-require_once __DIR__ . '/../includes/bootstrap.php';
-require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

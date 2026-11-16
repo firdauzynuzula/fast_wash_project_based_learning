@@ -3,9 +3,18 @@
  * Fast Wash - Laporan Pendapatan (Pemilik)
  * Sesuai desain Figma (Fast Wash - Laporan (Pemilik).png)
  */
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/auth.php';
+
+// Akses laporan dikhususkan untuk Pemilik / Admin
+if (($_SESSION['role'] ?? '') !== 'pemilik' && ($_SESSION['role'] ?? '') !== 'admin') {
+    $_SESSION['flash_error'] = 'Halaman Laporan Pendapatan hanya dapat diakses oleh Pemilik.';
+    header('Location: ' . $base . 'dashboard');
+    exit;
+}
+
 $title = 'Laporan Pendapatan';
 $route = $route ?? 'laporan';
-$userRole = $_SESSION['role'] ?? 'pemilik';
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -124,8 +133,6 @@ $warnaLayanan = [
     'Setrika'        => 'bg-[#d97706]',
 ];
 
-require_once __DIR__ . '/../includes/bootstrap.php';
-require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

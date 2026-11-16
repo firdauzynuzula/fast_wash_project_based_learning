@@ -5,7 +5,7 @@
  * komponen sidebar, dan Top Header Bar (Top-bar.png).
  */
 $base = $base ?? './';
-$userRole = $userRole ?? ($_SESSION['role'] ?? 'karyawan');
+$userRole = $_SESSION['role'] ?? ($userRole ?? 'karyawan');
 $isPemilik = ($userRole === 'pemilik' || $userRole === 'admin');
 $userName = $isPemilik ? 'Akun Pemilik' : ($_SESSION['nama'] ?? 'Karyawan');
 $userRoleLabel = $isPemilik ? 'Pemilik' : 'Karyawan';

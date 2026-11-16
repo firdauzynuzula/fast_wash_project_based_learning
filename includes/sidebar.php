@@ -5,7 +5,7 @@
  */
 $base = $base ?? './';
 $currentRoute = $route ?? '';
-$userRole = $userRole ?? ($_SESSION['role'] ?? 'karyawan');
+$userRole = $_SESSION['role'] ?? ($userRole ?? 'karyawan');
 $isPemilik = ($userRole === 'pemilik' || $userRole === 'admin');
 $userName = $isPemilik ? 'Akun Pemilik' : ($_SESSION['nama'] ?? 'Karyawan');
 $userEmail = $isPemilik ? 'fastwash@gmail.com' : ($_SESSION['email'] ?? 'fastwash@gmail.com');
