@@ -32,10 +32,13 @@ $statusSaatIni = $pesanan['status'];
 
 // Logika Undo: mundur 1 langkah
 $reverseMap = [
-    'diambil'    => 'selesai',
-    'selesai'    => 'diproses',
-    'diproses'   => 'diterima',
-    'diterima'   => null, // tidak bisa undo dari Diterima
+    'diambil'     => 'selesai',
+    'selesai'     => 'diproses',
+    'diproses'    => 'diterima',
+    'dicuci'      => 'diterima',
+    'dikeringkan' => 'diterima',
+    'disetrika'   => 'diterima',
+    'diterima'    => null, // tidak bisa undo dari Diterima
 ];
 
 $previousStatus = $reverseMap[$statusSaatIni] ?? null;

@@ -32,10 +32,14 @@ if (!$pesanan) {
 $statusSaatIni = $pesanan['status'];
 
 // Validasi urutan transisi: diterima -> diproses -> selesai -> diambil
+// Mendukung transisi dari status lama/detail: dicuci/dikeringkan/disetrika -> selesai
 $urutanValid = [
-    'diterima' => 'diproses',
-    'diproses' => 'selesai',
-    'selesai'  => 'diambil',
+    'diterima'    => 'diproses',
+    'diproses'    => 'selesai',
+    'dicuci'      => 'selesai',
+    'dikeringkan' => 'selesai',
+    'disetrika'   => 'selesai',
+    'selesai'     => 'diambil',
 ];
 
 if (!isset($urutanValid[$statusSaatIni]) || $urutanValid[$statusSaatIni] !== $statusTujuan) {

@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS pesanan (
     status_bayar        VARCHAR(20)   NOT NULL DEFAULT 'belum_lunas',
     catatan             VARCHAR(255),
     CONSTRAINT chk_pesanan_status
-        CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil', 'pending')),
+        CHECK (status IN ('pending', 'diterima', 'diproses', 'dicuci', 'dikeringkan', 'disetrika', 'selesai', 'diambil')),
     CONSTRAINT chk_pesanan_status_bayar
         CHECK (status_bayar IN ('belum_lunas', 'sebagian', 'lunas'))
 );
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS riwayat_status_pesanan (
     status              VARCHAR(30) NOT NULL,
     waktu               TIMESTAMP   NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_riwayat_status
-        CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil', 'pending'))
+        CHECK (status IN ('pending', 'diterima', 'diproses', 'dicuci', 'dikeringkan', 'disetrika', 'selesai', 'diambil'))
 );
 
 COMMENT ON TABLE riwayat_status_pesanan IS 'Log perubahan tahapan pengerjaan cucian dari waktu ke waktu oleh karyawan';

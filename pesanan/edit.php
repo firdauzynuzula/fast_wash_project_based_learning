@@ -73,6 +73,24 @@ $flow = [
         'next'     => 'selesai',
         'next_btn' => 'Ubah Ke Selesai',
     ],
+    'dicuci' => [
+        'urutan'   => 2,
+        'label'    => 'Diproses',
+        'next'     => 'selesai',
+        'next_btn' => 'Ubah Ke Selesai',
+    ],
+    'dikeringkan' => [
+        'urutan'   => 2,
+        'label'    => 'Diproses',
+        'next'     => 'selesai',
+        'next_btn' => 'Ubah Ke Selesai',
+    ],
+    'disetrika' => [
+        'urutan'   => 2,
+        'label'    => 'Diproses',
+        'next'     => 'selesai',
+        'next_btn' => 'Ubah Ke Selesai',
+    ],
     'selesai' => [
         'urutan'   => 3,
         'label'    => 'Selesai',
@@ -91,6 +109,9 @@ $flow = [
 $currentStep = 1; // default: Diterima
 switch ($currentStatus) {
     case 'diproses':
+    case 'dicuci':
+    case 'dikeringkan':
+    case 'disetrika':
         $currentStep = 2;
         break;
     case 'selesai':
