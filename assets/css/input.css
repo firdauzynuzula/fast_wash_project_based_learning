@@ -36,9 +36,3 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
-
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
