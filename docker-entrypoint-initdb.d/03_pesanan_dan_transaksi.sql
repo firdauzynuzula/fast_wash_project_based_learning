@@ -73,3 +73,22 @@ CREATE TABLE IF NOT EXISTS riwayat_transaksi (
 COMMENT ON TABLE riwayat_transaksi IS 'Pencatatan pembayaran transaksi bersifat Append-Only. Koreksi hanya melalui mekanisme Void';
 COMMENT ON COLUMN riwayat_transaksi.jenis_pembayaran IS 'Metode pembayaran di UI: tunai, qris, transfer';
 COMMENT ON COLUMN riwayat_transaksi.status_transaksi IS 'valid = sah/tercatat kas, void = dibatalkan resmi';
+
+ROLLBACK;
+
+BEGIN;
+
+ALTER TABLE pesanan DROP CONSTRAINT chk_pesanan_status;
+ALTER TABLE riwayat_status_pesanan DROP CONSTRAINT chk_riwayat_status;
+
+UPDATE pesanan SET status = 'diterima' WHERE status = 'pending';
+UPDATE pesanan SET status = 'diproses' WHERE status IN ('dicuci', 'dikeringkan', 'disetrika');
+UPDATE riwayat_status_pesanan SET status = 'diterima' WHERE status = 'pending';
+UPDATE riwayat_status_pesanan SET status = 'diproses' WHERE status IN ('dicuci', 'dikeringkan', 'disetrika');
+
+ALTER TABLE pesanan ADD CONSTRAINT chk_pesanan_status
+    CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil'));
+ALTER TABLE riwayat_status_pesanan ADD CONSTRAINT chk_riwayat_status
+    CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil'));
+
+COMMIT;

@@ -9,88 +9,80 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 csrf_check();
 
-$idPesanan    = (int) ($_POST['id_pesanan'] ?? 0);
+$idPesanan = (int) ($_POST['id_pesanan'] ?? 0);
+
+function kembaliDetail(int $id, string $kunci, string $pesan): void
+{
+    global $base;
+    $_SESSION[$kunci] = $pesan;
+    header('Location: ' . $base . 'pesanan/detail?id=' . $id);
+    exit;
+}
 
 if ($idPesanan <= 0) {
-    $_SESSION['flash_error'] = 'Data pesanan tidak valid.';
+    $_SESSION['flash_error'] = 'Pesanan tidak valid.';
     header('Location: ' . $base . 'pesanan');
     exit;
 }
 
-// Ambil status saat ini
-$stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar FROM pesanan WHERE id_pesanan = :id");
-$stmt->execute(['id' => $idPesanan]);
-$pesanan = $stmt->fetch();
-
-if (!$pesanan) {
-    $_SESSION['flash_error'] = 'Pesanan tidak ditemukan.';
-    header('Location: ' . $base . 'pesanan');
-    exit;
-}
-
-$statusSaatIni = $pesanan['status'];
-
-// Logika Undo: mundur 1 langkah
-$reverseMap = [
-    'diambil'    => 'selesai',
-    'selesai'    => 'diproses',
-    'diproses'   => 'diterima',
-    'diterima'   => null, // tidak bisa undo dari Diterima
+// Alur mundur satu tahap
+$prevMap = [
+    'diterima' => null,
+    'diproses' => 'diterima',
+    'selesai'  => 'diproses',
+    'diambil'  => 'selesai',
 ];
 
-$previousStatus = $reverseMap[$statusSaatIni] ?? null;
-
-if (!$previousStatus) {
-    $_SESSION['flash_error'] = 'Tidak dapat mengembalikan status dari tahap awal (Diterima).';
-    header('Location: ' . $base . 'pesanan/detail?id=' . $idPesanan);
-    exit;
-}
-
-// Pastikan karyawan valid
 $idKaryawan = (int) ($_SESSION['id_karyawan'] ?? $_SESSION['user_id'] ?? 1);
-$checkKaryawan = $pdo->prepare("SELECT id_karyawan FROM karyawan WHERE id_karyawan = :id");
-$checkKaryawan->execute(['id' => $idKaryawan]);
-if (!$checkKaryawan->fetch()) {
+$cekKaryawan = $pdo->prepare("SELECT id_karyawan FROM karyawan WHERE id_karyawan = :id");
+$cekKaryawan->execute(['id' => $idKaryawan]);
+if (!$cekKaryawan->fetch()) {
     $idKaryawan = (int) $pdo->query("SELECT id_karyawan FROM karyawan LIMIT 1")->fetchColumn() ?: 1;
 }
 
 try {
     $pdo->beginTransaction();
 
-    // Update status pesanan
-    $stmtUpdate = $pdo->prepare("
-        UPDATE pesanan
-           SET status = :status,
-               waktu_selesai = (CASE WHEN :status = 'selesai' AND waktu_selesai IS NULL THEN NOW() ELSE waktu_selesai END)
-         WHERE id_pesanan = :id
-    ");
-    $stmtUpdate->execute([
-        'status' => $previousStatus,
-        'id'     => $idPesanan,
-    ]);
+    $stmt = $pdo->prepare("SELECT status FROM pesanan WHERE id_pesanan = :id FOR UPDATE");
+    $stmt->execute(['id' => $idPesanan]);
+    $statusSekarang = $stmt->fetchColumn();
 
-    // Catat log riwayat
-    $stmtRiwayat = $pdo->prepare("
+    if ($statusSekarang === false) {
+        $pdo->rollBack();
+        $_SESSION['flash_error'] = 'Pesanan tidak ditemukan.';
+        header('Location: ' . $base . 'pesanan');
+        exit;
+    }
+
+    $statusSekarang = strtolower($statusSekarang);
+    $statusSebelum  = $prevMap[$statusSekarang] ?? null;
+
+    if ($statusSebelum === null) {
+        $pdo->rollBack();
+        kembaliDetail($idPesanan, 'flash_error', 'Status pesanan sudah berada di tahap awal.');
+    }
+
+    $upd = $pdo->prepare("UPDATE pesanan SET status = :status WHERE id_pesanan = :id");
+    $upd->execute(['status' => $statusSebelum, 'id' => $idPesanan]);
+
+    // Dicatat sebagai riwayat baru supaya jejak perubahan tetap utuh
+    $riwayat = $pdo->prepare("
         INSERT INTO riwayat_status_pesanan (id_pesanan, id_karyawan, status, waktu)
         VALUES (:id_pesanan, :id_karyawan, :status, NOW())
     ");
-    $stmtRiwayat->execute([
+    $riwayat->execute([
         'id_pesanan'  => $idPesanan,
         'id_karyawan' => $idKaryawan,
-        'status'      => $previousStatus,
+        'status'      => $statusSebelum,
     ]);
 
     $pdo->commit();
 
-    $labelPrevious = ucfirst($previousStatus);
-    $_SESSION['flash_sukses'] = "Status pesanan {$pesanan['kode_pesanan']} berhasil dikembalikan ke '{$labelPrevious}'.";
+    kembaliDetail($idPesanan, 'flash_sukses', 'Status dikembalikan ke ' . ucfirst($statusSebelum) . '.');
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $_SESSION['flash_error'] = 'Gagal mengembalikan status: ' . $e->getMessage();
+    kembaliDetail($idPesanan, 'flash_error', 'Gagal mengembalikan status: ' . $e->getMessage());
 }
-
-header('Location: ' . $base . 'pesanan/detail?id=' . $idPesanan);
-exit;
