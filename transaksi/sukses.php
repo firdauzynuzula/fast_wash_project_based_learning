@@ -5,7 +5,7 @@ require_once __DIR__ . '/../includes/auth.php';
 
 $id = (int) ($_GET['id'] ?? 0);
 if ($id <= 0) {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -33,12 +33,12 @@ $stmt->execute(['id' => $id]);
 $pesanan = $stmt->fetch();
 
 if (!$pesanan) {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
 $breadcrumb = [
-    ['label' => 'Pesanan', 'url' => 'transaksi/status'],
+    ['label' => 'Pesanan', 'url' => 'pesanan'],
     ['label' => 'Pesanan Baru', 'url' => 'transaksi/tambah'],
     ['label' => 'Pesanan Dibuat', 'url' => ''],
 ];
@@ -106,7 +106,7 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- 2 Tombol Aksi Sesuai Figma -->
         <div style="display: flex; flex-direction: column; gap: 12px;">
             <!-- Tombol 1: Lihat Pesanan (Solid Biru #0088FF) -->
-            <a href="<?php echo $base; ?>transaksi/detail?id=<?php echo (int) $pesanan['id_pesanan']; ?>"
+            <a href="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $pesanan['id_pesanan']; ?>"
                style="width: 100%; padding: 14px 20px; background-color: #0088FF; color: #FFFFFF; font-weight: 700; font-size: 14px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background-color 0.2s; display: block; text-align: center; cursor: pointer;">
                 Lihat Pesanan
             </a>

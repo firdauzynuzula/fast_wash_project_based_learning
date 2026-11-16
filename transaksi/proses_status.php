@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -14,7 +14,7 @@ $statusTujuan = trim($_POST['status_tujuan'] ?? '');
 
 if ($idPesanan <= 0 || !in_array($statusTujuan, ['diterima', 'diproses', 'selesai', 'diambil'], true)) {
     $_SESSION['flash_error'] = 'Data perubahan status tidak valid.';
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -25,7 +25,7 @@ $pesanan = $stmt->fetch();
 
 if (!$pesanan) {
     $_SESSION['flash_error'] = 'Pesanan tidak ditemukan.';
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -40,7 +40,7 @@ $urutanValid = [
 
 if (!isset($urutanValid[$statusSaatIni]) || $urutanValid[$statusSaatIni] !== $statusTujuan) {
     $_SESSION['flash_error'] = "Transisi status dari '{$statusSaatIni}' ke '{$statusTujuan}' tidak diizinkan.";
-    header('Location: ' . $base . 'transaksi/detail?id=' . $idPesanan);
+    header('Location: ' . $base . 'pesanan/detail?id=' . $idPesanan);
     exit;
 }
 
@@ -90,5 +90,5 @@ try {
     $_SESSION['flash_error'] = 'Gagal memperbarui status: ' . $e->getMessage();
 }
 
-header('Location: ' . $base . 'transaksi/detail?id=' . $idPesanan);
+header('Location: ' . $base . 'pesanan/detail?id=' . $idPesanan);
 exit;

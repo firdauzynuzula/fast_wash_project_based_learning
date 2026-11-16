@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 

@@ -169,7 +169,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="lg:col-span-2 bg-white rounded-2xl lg:rounded-3xl p-4 sm:p-5 shadow-xs border border-slate-100 flex flex-col justify-between min-h-0">
             <div class="shrink-0 flex items-center justify-between pb-2.5 border-b border-slate-100">
                 <h2 class="text-base font-bold text-slate-800">Antrian Pengerjaan</h2>
-                <a href="<?php echo $base; ?>transaksi/status" class="text-xs sm:text-sm font-semibold text-[#0085ff] hover:underline">Lihat Semua</a>
+                <a href="<?php echo $base; ?>pesanan" class="text-xs sm:text-sm font-semibold text-[#0085ff] hover:underline">Lihat Semua</a>
             </div>
 
             <div class="flex-1 flex flex-col justify-around divide-y divide-slate-100 my-1 overflow-hidden">

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 $breadcrumb = [
-    ['label' => 'Pesanan', 'url' => 'transaksi/status'],
+    ['label' => 'Pesanan', 'url' => 'pesanan'],
     ['label' => 'Riwayat Transaksi', 'url' => ''],
 ];
 
@@ -59,7 +59,7 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-sm text-slate-500 mt-0.5">Daftar transaksi pesanan laundry yang telah selesai atau lunas</p>
     </div>
     <div>
-        <a href="<?php echo $base; ?>transaksi/status" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors">
+        <a href="<?php echo $base; ?>pesanan" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors">
             &larr; Ke Daftar Pesanan Aktif
         </a>
     </div>
@@ -108,7 +108,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php foreach ($riwayat as $r): ?>
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-4 px-5 whitespace-nowrap font-bold text-[#0085ff]">
-                                <a href="<?php echo $base; ?>transaksi/detail?id=<?php echo (int) $r['id_pesanan']; ?>" class="hover:underline">
+                                <a href="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $r['id_pesanan']; ?>" class="hover:underline">
                                     <?php echo e($r['kode_pesanan']); ?>
 
                                 </a>

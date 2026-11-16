@@ -5,7 +5,7 @@ require_once __DIR__ . '/../includes/auth.php';
 
 $id = (int) ($_GET['id'] ?? 0);
 if ($id <= 0) {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -15,7 +15,7 @@ $stmtHeader->execute(['id' => $id]);
 $nota = $stmtHeader->fetch();
 
 if (!$nota) {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -47,8 +47,8 @@ $waCleanPhone = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', (string)
 $waUrl = "https://wa.me/{$waCleanPhone}?text={$waMsg}";
 
 $breadcrumb = [
-    ['label' => 'Pesanan', 'url' => 'transaksi/status'],
-    ['label' => 'Rincian Pesanan', 'url' => 'transaksi/detail?id=' . $nota['id_pesanan']],
+    ['label' => 'Pesanan', 'url' => 'pesanan'],
+    ['label' => 'Rincian Pesanan', 'url' => 'pesanan/detail?id=' . $nota['id_pesanan']],
     ['label' => 'Nota Pesanan', 'url' => ''],
 ];
 
@@ -83,7 +83,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Action Bar Atas Sesuai Desain Figma (Kirim WhatsApp & Cetak Nota) -->
 <div class="no-print flex items-center justify-between gap-3 mb-6">
     <div class="flex items-center gap-2">
-        <a href="<?php echo $base; ?>transaksi/detail?id=<?php echo (int) $nota['id_pesanan']; ?>"
+        <a href="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $nota['id_pesanan']; ?>"
            class="text-xs text-slate-500 hover:text-[#0085ff] flex items-center gap-1 font-medium">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>

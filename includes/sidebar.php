@@ -80,7 +80,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
 
             <!-- 2. Pesanan -->
             <?php $act = $isMenu(['pesanan']); ?>
-            <a href="<?php echo $base; ?>pesanan/status"
+            <a href="<?php echo $base; ?>pesanan"
                class="<?php echo $act
                    ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"

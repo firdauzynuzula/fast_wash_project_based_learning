@@ -51,8 +51,14 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-base font-bold text-slate-800">Pelanggan</h2>
-                <button type="button" onclick="togglePelangganBaru()" id="btnModePelanggan" class="text-xs font-semibold text-[#0085ff] hover:underline">
-                    + Pelanggan Baru?
+                <button type="button" onclick="togglePelangganBaru()" id="btnModePelanggan" class="inline-flex items-center gap-1 text-sm font-semibold text-[#0085ff] hover:underline">
+                    <svg id="iconTambahPelanggan" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"/>
+                    </svg>
+                    <svg id="iconPilihPelanggan" class="hidden w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7 7-7M3 12h18"/>
+                    </svg>
+                    <span id="labelModePelanggan">Pelanggan Baru</span>
                 </button>
             </div>
 
@@ -69,11 +75,6 @@ require_once __DIR__ . '/../includes/header.php';
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -243,20 +244,26 @@ function togglePelangganBaru() {
     modeBaru = !modeBaru;
     const boxPilih = document.getElementById('boxPilihPelanggan');
     const boxBaru  = document.getElementById('boxPelangganBaru');
-    const btn      = document.getElementById('btnModePelanggan');
+    const iconTambah = document.getElementById('iconTambahPelanggan');
+    const iconPilih  = document.getElementById('iconPilihPelanggan');
+    const label      = document.getElementById('labelModePelanggan');
 
     if (modeBaru) {
         boxPilih.classList.add('hidden');
         boxBaru.classList.remove('hidden');
         boxBaru.classList.add('grid');
-        btn.textContent = '← Pilih Terdaftar';
+        iconTambah.classList.add('hidden');
+        iconPilih.classList.remove('hidden');
+        label.textContent = 'Pilih Terdaftar';
         document.getElementById('selectPelanggan').value = '';
         document.getElementById('inputWhatsappPreview').value = '';
     } else {
         boxPilih.classList.remove('hidden');
         boxBaru.classList.add('hidden');
         boxBaru.classList.remove('grid');
-        btn.textContent = '+ Pelanggan Baru?';
+        iconTambah.classList.remove('hidden');
+        iconPilih.classList.add('hidden');
+        label.textContent = 'Pelanggan Baru';
         document.getElementById('nama_baru').value = '';
         document.getElementById('telepon_baru').value = '';
     }

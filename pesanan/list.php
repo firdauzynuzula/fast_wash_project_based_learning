@@ -3,8 +3,12 @@ $title = 'Daftar Pesanan';
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
+$listPath = 'pesanan';
+$detailPath = 'pesanan/detail';
+$newOrderPath = 'pesanan/tambah';
+
 $breadcrumb = [
-    ['label' => 'Pesanan', 'url' => 'pesanan'],
+    ['label' => 'Pesanan', 'url' => $listPath],
     ['label' => 'Daftar Pesanan', 'url' => ''],
 ];
 
@@ -74,8 +78,8 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Breadcrumb ditampilkan oleh header.php (komponen nav berchevron). -->
 
 <!-- Filter & Pencarian (Satu Baris: Pencarian | Status | Bayar | Aksi) -->
-<form method="get" action="<?php echo $base; ?>pesanan" class="flex flex-wrap items-center gap-3 mb-6">
-    <div class="relative flex-1 min-w-0 max-w-xl">
+<form method="get" action="<?php echo $base . $listPath; ?>" class="flex flex-wrap items-center gap-3 mb-6">
+    <div class="relative flex-1 min-w-0 max-w-2xl">
         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"/>
@@ -86,47 +90,32 @@ require_once __DIR__ . '/../includes/header.php';
                name="cari"
                value="<?php echo e($cari); ?>"
                placeholder="Cari Nama Pelanggan / Kode Pesanan"
-               class="w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-slate-200 rounded-2xl shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0085ff]/20 focus:border-[#0085ff] placeholder:text-slate-400 text-slate-700">
-        <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </div>
+               class="w-full pl-10 pr-8 py-2.5 text-sm bg-white border border-slate-200 rounded-2xl shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0085ff]/20 focus:border-[#0085ff] placeholder:text-slate-400 text-slate-700">
     </div>
 
     <div class="relative">
-        <select name="status" onchange="this.form.submit()" class="appearance-none pl-4 pr-10 whitespace-nowrap py-2.5 text-sm bg-white border border-slate-200 rounded-2xl shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0085ff]/20 focus:border-[#0085ff] text-slate-700 cursor-pointer font-normal">
+        <select name="status" onchange="this.form.submit()" style="width: 9rem; padding-left: 1rem;" class="appearance-none pl-6 pr-10 whitespace-nowrap py-2.5 text-sm bg-white border border-slate-200 rounded-2xl shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0085ff]/20 focus:border-[#0085ff] text-slate-700 cursor-pointer font-normal">
             <option value="">Status Cucian</option>
             <option value="diterima" <?php echo $filterStatus === 'diterima' ? 'selected' : ''; ?>>Diterima</option>
             <option value="diproses" <?php echo $filterStatus === 'diproses' ? 'selected' : ''; ?>>Diproses</option>
             <option value="selesai" <?php echo $filterStatus === 'selesai' ? 'selected' : ''; ?>>Selesai</option>
             <option value="diambil" <?php echo $filterStatus === 'diambil' ? 'selected' : ''; ?>>Diambil</option>
         </select>
-        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </div>
     </div>
 
     <div class="relative">
-        <select name="bayar" onchange="this.form.submit()" class="appearance-none pl-4 pr-10 whitespace-nowrap py-2.5 text-sm bg-white border border-slate-200 rounded-2xl shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0085ff]/20 focus:border-[#0085ff] text-slate-700 cursor-pointer font-normal">
+        <select name="bayar" onchange="this.form.submit()" style="width: 11rem; padding-left: 1rem;" class="appearance-none pl-6 pr-10 whitespace-nowrap py-2.5 text-sm bg-white border border-slate-200 rounded-2xl shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0085ff]/20 focus:border-[#0085ff] text-slate-700 cursor-pointer font-normal">
             <option value="">Status Pembayaran</option>
             <option value="belum_lunas" <?php echo $filterBayar === 'belum_lunas' ? 'selected' : ''; ?>>Belum Lunas</option>
             <option value="lunas" <?php echo $filterBayar === 'lunas' ? 'selected' : ''; ?>>Lunas</option>
         </select>
-        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </div>
     </div>
 
     <?php if ($cari !== '' || $filterStatus !== '' || $filterBayar !== ''): ?>
-        <a href="<?php echo $base; ?>pesanan" class="text-xs font-semibold text-rose-500 hover:underline px-2 py-2 whitespace-nowrap">Reset</a>
+        <a href="<?php echo $base . $listPath; ?>" class="text-xs font-semibold text-rose-500 hover:underline px-2 py-2 whitespace-nowrap">Reset</a>
     <?php endif; ?>
 
-    <a href="<?php echo $base; ?>pesanan/tambah" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0085ff] hover:bg-[#0070d8] text-white font-semibold text-sm rounded-2xl shadow-sm shadow-[#0085ff]/20 transition-all whitespace-nowrap">
+    <a href="<?php echo $base . $newOrderPath; ?>" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0085ff] hover:bg-[#0070d8] text-white font-semibold text-sm rounded-2xl shadow-sm shadow-[#0085ff]/20 transition-all whitespace-nowrap">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
         <span>Pesanan Baru</span>
     </a>
@@ -173,7 +162,7 @@ require_once __DIR__ . '/../includes/header.php';
                         ?>
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-4 px-6 whitespace-nowrap font-medium text-[#0085ff]">
-                                <a href="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $row['id_pesanan']; ?>" class="hover:underline">
+                                <a href="<?php echo $base . $detailPath; ?>?id=<?php echo (int) $row['id_pesanan']; ?>" class="hover:underline">
                                     <?php echo e($row['kode_pesanan']); ?>
                                 </a>
                             </td>
@@ -192,18 +181,11 @@ require_once __DIR__ . '/../includes/header.php';
                             </td>
                             <td class="py-4 px-6 whitespace-nowrap text-center">
                                 <div class="inline-flex items-center justify-center gap-2">
-                                    <a href="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $row['id_pesanan']; ?>" class="px-4 py-1.5 text-xs text-slate-600 font-normal bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors">Status</a>
-
-                                    <?php if (!$isLunas): ?>
-                                        <form method="post" action="<?php echo $base; ?>transaksi/bayar" class="inline">
-                                            <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
-                                            <input type="hidden" name="id_pesanan" value="<?php echo (int) $row['id_pesanan']; ?>">
-                                            <input type="hidden" name="redirect" value="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $row['id_pesanan']; ?>">
-                                            <button type="submit" class="px-4 py-1.5 text-xs text-slate-600 font-normal bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors">Bayar</button>
-                                        </form>
-                                    <?php endif; ?>
+                                        <a href="<?php echo $base . $detailPath; ?>?id=<?php echo (int) $row['id_pesanan']; ?>" class="px-4 py-1.5 text-xs text-slate-600 font-normal bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors">Status</a>
                                     <?php if ($isLunas): ?>
                                         <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $row['id_pesanan']; ?>" class="px-4 py-1.5 text-xs text-slate-600 font-normal bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors">Lihat Nota</a>
+                                    <?php else: ?>
+                                        <button type="button" onclick="bukaModalBayar(<?php echo (int) $row['id_pesanan']; ?>, '<?php echo e($row['kode_pesanan']); ?>', '<?php echo e($row['nama_pelanggan']); ?>', <?php echo (float) $row['total_harga']; ?>)" class="px-4 py-1.5 text-xs text-slate-600 font-normal bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors">Bayar</button>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -222,7 +204,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php if ($i === $halamanAktif): ?>
                         <span class="px-3 py-1.5 bg-[#0085ff] text-white text-xs font-semibold rounded-lg"><?php echo $i; ?></span>
                     <?php else: ?>
-                        <a href="<?php echo $base; ?>pesanan?page=<?php echo $i; ?>&cari=<?php echo urlencode($cari); ?>&status=<?php echo urlencode($filterStatus); ?>&bayar=<?php echo urlencode($filterBayar); ?>" class="px-3 py-1.5 border border-slate-200 text-slate-600 text-xs font-normal rounded-lg hover:bg-slate-50 transition-colors">
+                        <a href="<?php echo $base . $listPath; ?>?page=<?php echo $i; ?>&cari=<?php echo urlencode($cari); ?>&status=<?php echo urlencode($filterStatus); ?>&bayar=<?php echo urlencode($filterBayar); ?>" class="px-3 py-1.5 border border-slate-200 text-slate-600 text-xs font-normal rounded-lg hover:bg-slate-50 transition-colors">
                             <?php echo $i; ?>
                         </a>
                     <?php endif; ?>
@@ -231,5 +213,66 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 </div>
+
+<div id="modalBayar" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 p-6">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <h3 class="text-base font-bold text-slate-800">Konfirmasi Pembayaran</h3>
+                <button type="button" onclick="tutupModalBayar()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            <form action="<?php echo $base; ?>transaksi/bayar" method="post" class="space-y-4">
+                <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+                <input type="hidden" name="id_pesanan" id="modalIdPesanan" value="">
+                <div class="p-4 bg-slate-50 rounded-2xl space-y-1.5 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Kode Pesanan:</span>
+                        <span class="font-bold text-[#0085ff]" id="modalKodePesanan">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Pelanggan:</span>
+                        <span class="font-semibold text-slate-800" id="modalNamaPelanggan">-</span>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-slate-200">
+                        <span class="text-slate-600 font-medium">Total Tagihan:</span>
+                        <span class="font-bold text-[#0085ff] text-sm" id="modalTotalHarga">Rp 0</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">Metode Pembayaran</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="flex flex-col items-center justify-center p-3 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-[#0085ff] has-checked:border-[#0085ff] has-checked:bg-blue-50/50 transition-all text-xs">
+                            <input type="radio" name="metode" value="tunai" checked class="hidden">
+                            <span class="font-semibold text-slate-800">Tunai</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-3 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-[#0085ff] has-checked:border-[#0085ff] has-checked:bg-blue-50/50 transition-all text-xs">
+                            <input type="radio" name="metode" value="qris" class="hidden">
+                            <span class="font-semibold text-slate-800">QRIS</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-3 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-[#0085ff] has-checked:border-[#0085ff] has-checked:bg-blue-50/50 transition-all text-xs">
+                            <input type="radio" name="metode" value="transfer" class="hidden">
+                            <span class="font-semibold text-slate-800">Transfer</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2.5 pt-3">
+                    <button type="button" onclick="tutupModalBayar()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">Batal</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-semibold text-white bg-[#0085ff] hover:bg-[#0070d8] rounded-xl shadow-xs transition-colors">Konfirmasi Lunas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<script>
+    function bukaModalBayar(id, kode, nama, total) {
+        document.getElementById('modalIdPesanan').value = id;
+        document.getElementById('modalKodePesanan').textContent = kode;
+        document.getElementById('modalNamaPelanggan').textContent = nama;
+        document.getElementById('modalTotalHarga').textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
+        document.getElementById('modalBayar').classList.remove('hidden');
+    }
+
+    function tutupModalBayar() {
+        document.getElementById('modalBayar').classList.add('hidden');
+    }
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

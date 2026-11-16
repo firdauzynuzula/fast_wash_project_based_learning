@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
@@ -23,13 +23,13 @@ $pesanan = $stmt->fetch();
 
 if (!$pesanan) {
     $_SESSION['flash_error'] = 'Pesanan tidak ditemukan.';
-    header('Location: ' . $base . 'transaksi/status');
+    header('Location: ' . $base . 'pesanan');
     exit;
 }
 
 if ($pesanan['status_bayar'] === 'lunas') {
     $_SESSION['flash_sukses'] = "Pesanan {$pesanan['kode_pesanan']} sudah berstatus Lunas.";
-    $target = $redirect ? ($base . $redirect) : ($base . 'transaksi/status');
+    $target = $redirect ? ($base . $redirect) : ($base . 'pesanan');
     header('Location: ' . $target);
     exit;
 }
@@ -64,6 +64,6 @@ try {
     $_SESSION['flash_error'] = 'Gagal mencatat pembayaran: ' . $e->getMessage();
 }
 
-$target = $redirect ? ($base . $redirect) : ($base . 'transaksi/status');
+$target = $redirect ? ($base . $redirect) : ($base . 'pesanan');
 header('Location: ' . $target);
 exit;

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 $breadcrumb = [
-    ['label' => 'Pesanan', 'url' => 'transaksi/status'],
+    ['label' => 'Pesanan', 'url' => 'pesanan'],
     ['label' => 'Pesanan Baru', 'url' => ''],
 ];
 

@@ -30,9 +30,7 @@ $routes = [
 
     'transaksi/tambah'        => 'transaksi/tambah.php',
     'transaksi/proses_tambah' => 'transaksi/proses_tambah.php',
-    'transaksi/status'        => 'transaksi/status.php',
     'transaksi/proses_status' => 'transaksi/proses_status.php',
-    'transaksi/detail'        => 'transaksi/detail.php',
     'transaksi/sukses'        => 'transaksi/sukses.php',
     'transaksi/nota'          => 'transaksi/nota.php',
     'transaksi/bayar'         => 'transaksi/bayar.php',
@@ -40,8 +38,6 @@ $routes = [
 
     // Alias Pesanan (Frontend / Navigasi)
     'pesanan'                 => 'pesanan/list.php',
-    'pesanan/status'          => 'pesanan/list.php',
-    'pesanan/list'            => 'pesanan/list.php',
     'pesanan/tambah'          => 'pesanan/tambah.php',
     'pesanan/detail'          => 'pesanan/edit.php',
     'pesanan/proses_tambah'   => 'pesanan/proses_tambah.php',
@@ -83,6 +79,13 @@ $route = trim($path, '/');
 // ('./' untuk /index, '../' untuk /pelanggan/list, dst). Dipakai bootstrap, header, auth.
 $depth = substr_count(ltrim($path, '/'), '/');
 $base  = $depth === 0 ? './' : str_repeat('../', $depth);
+
+if (in_array($route, ['transaksi/status', 'transaksi/detail', 'pesanan/status', 'pesanan/list'], true)) {
+    $query = $_SERVER['QUERY_STRING'] ?? '';
+    $target = $route === 'transaksi/detail' ? 'pesanan/detail' : 'pesanan';
+    header('Location: ' . $base . $target . ($query !== '' ? '?' . $query : ''), true, 302);
+    exit;
+}
 
 if (!isset($routes[$route])) {
     http_response_code(404);
