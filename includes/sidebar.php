@@ -4,7 +4,19 @@
  * Sesuai desain Figma (Header.png & Sidebar.png & Dokumen Pemilik)
  */
 $base = $base ?? './';
+global $route;
 $currentRoute = $route ?? '';
+
+// Fallback deteksi rute aktif dari URL jika $route belum diset oleh controller/view
+if ($currentRoute === '' && !empty($_SERVER['REQUEST_URI'])) {
+    $cleanPath = trim((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+    foreach (['absensi', 'pesanan', 'pelanggan', 'pembayaran', 'laporan', 'log-activity', 'dashboard'] as $r) {
+        if (preg_match('#(^|/)' . preg_quote($r, '#') . '(/|$)#i', $cleanPath)) {
+            $currentRoute = $r;
+            break;
+        }
+    }
+}
 $userRole = $_SESSION['role'] ?? ($userRole ?? 'karyawan');
 $isPemilik = ($userRole === 'pemilik' || $userRole === 'admin');
 $userName = $isPemilik ? 'Akun Pemilik' : ($_SESSION['nama'] ?? 'Karyawan');
@@ -86,10 +98,12 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
-                <!-- Ikon Baju / T-Shirt -->
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 3l4 3-2 5-3-1v10H9V10L6 11 4 6l4-3c1 1.5 3 2 4 2s3-.5 4-2z"/>
-                </svg>
+                <!-- Ikon Baju / T-Shirt (assets/img/svg/logo-pesanan.svg) -->
+             <svg xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="currentColor" d="m21.37 4.07l-5-2A.9.9 0 0 0 16 2h-1c-.55 0-1 .45-1 1c0 1.1-.9 2-2 2s-2-.9-2-2c0-.55-.45-1-1-1H8c-.13 0-.25.02-.37.07l-5 2A1 1 0 0 0 2 5v6c0 .55.45 1 1 1h2v9c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-9h2c.55 0 1-.45 1-1V5a1 1 0 0 0-.63-.93M20 10h-3v10H7V10H4V5.68l4.13-1.65c.45 1.71 2.02 2.98 3.87 2.98s3.41-1.26 3.87-2.98L20 5.68z" />
+</svg>
+
                 <span>Pesanan</span>
             </a>
 
@@ -100,9 +114,11 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1m-4 6H3v-2a4 4 0 014-4h6a4 4 0 014 4v2m-3-10a4 4 0 11-8 0 4 4 0 018 0zm10 0a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 20c0-1.742-1.67-3.223-4-3.773M15 20c0-2.21-2.686-4-6-4s-6 1.79-6 4m12-7a4 4 0 0 0 0-8m-6 8a4 4 0 1 1 0-8a4 4 0 0 1 0 8" />
+            </svg>
+
                 <span>Pelanggan</span>
             </a>
 
@@ -128,10 +144,15 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m7 15 4-5 3 3 5-6"/>
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-miterlimit="5.759" d="M3 3v16a2 2 0 0 0 2 2h16" />
+		<path stroke-miterlimit="5.759" d="m7 14l4-4l4 4l6-6" />
+		<path d="M18 8h3v3" />
+	</g>
+</svg>
+
                 <span>Laporan</span>
             </a>
             <?php else: ?>
@@ -158,11 +179,12 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                    ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 3.5v5h5"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5V12l3 2"/>
-                </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 1024 1024">
+	<path d="M0 0h1024v1024H0z" fill="none" />
+	<path fill="currentColor" d="M945 412H689c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h256c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8M811 548H689c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h122c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8M477.3 322.5H434c-6.2 0-11.2 5-11.2 11.2v248c0 3.6 1.7 6.9 4.6 9l148.9 108.6c5 3.6 12 2.6 15.6-2.4l25.7-35.1v-.1c3.6-5 2.5-12-2.5-15.6l-126.7-91.6V333.7c.1-6.2-5-11.2-11.1-11.2" />
+	<path fill="currentColor" d="M804.8 673.9H747c-5.6 0-10.9 2.9-13.9 7.7c-12.7 20.1-27.5 38.7-44.5 55.7c-29.3 29.3-63.4 52.3-101.3 68.3c-39.3 16.6-81 25-124 25c-43.1 0-84.8-8.4-124-25c-37.9-16-72-39-101.3-68.3s-52.3-63.4-68.3-101.3c-16.6-39.2-25-80.9-25-124s8.4-84.7 25-124c16-37.9 39-72 68.3-101.3s63.4-52.3 101.3-68.3c39.2-16.6 81-25 124-25c43.1 0 84.8 8.4 124 25c37.9 16 72 39 101.3 68.3c17 17 31.8 35.6 44.5 55.7c3 4.8 8.3 7.7 13.9 7.7h57.8c6.9 0 11.3-7.2 8.2-13.3c-65.2-129.7-197.4-214-345-215.7c-216.1-2.7-395.6 174.2-396 390.1C71.6 727.5 246.9 903 463.2 903c149.5 0 283.9-84.6 349.8-215.8c3.1-6.1-1.4-13.3-8.2-13.3" />
+</svg>
+
                 <span>Log Aktivitas</span>
             </a>
 

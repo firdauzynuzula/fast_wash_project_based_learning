@@ -56,6 +56,7 @@ $routes = [
 
     'absensi'                 => 'absensi/index.php',
     'absensi/index'           => 'absensi/index.php',
+    'absensi/proses'          => 'absensi/proses.php',
 
     'log-activity'            => 'log-activity/index.php',
     'log-activity/index'      => 'log-activity/index.php',
