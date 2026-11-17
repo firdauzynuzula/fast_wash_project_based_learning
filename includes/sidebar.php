@@ -67,7 +67,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['', 'dashboard']); ?>
             <a href="<?php echo $base; ?>dashboard"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['pesanan']); ?>
             <a href="<?php echo $base; ?>pesanan"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <!-- Ikon Baju / T-Shirt -->
@@ -97,7 +97,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['pelanggan']); ?>
             <a href="<?php echo $base; ?>pelanggan/list"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -110,8 +110,8 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['pembayaran']); ?>
             <a href="<?php echo $base; ?>pembayaran"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
-                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <rect x="2.5" y="5" width="19" height="14" rx="2.5"/>
@@ -125,7 +125,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['laporan']); ?>
             <a href="<?php echo $base; ?>laporan"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['absensi']); ?>
             <a href="<?php echo $base; ?>absensi"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
             <?php $act = $isMenu(['log-activity']); ?>
             <a href="<?php echo $base; ?>log-activity"
                class="<?php echo $act
-                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   ? 'bg-[#0085ff] text-white rounded-2xl shadow-sm shadow-[#0085ff]/20'
                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
                <?php if ($act) echo 'aria-current="page"'; ?>>
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
