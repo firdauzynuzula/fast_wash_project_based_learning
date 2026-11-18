@@ -410,7 +410,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             $formattedDesc = e($log['deskripsi']);
                                             if (!empty($log['kode_pesanan'])) {
                                                 $kp = e($log['kode_pesanan']);
-                                                $formattedDesc = str_replace($kp, '<a href="' . $base . 'transaksi/status?q=' . urlencode($kp) . '" class="text-[#0085ff] font-bold hover:underline">' . $kp . '</a>', $formattedDesc);
+                                                $formattedDesc = str_replace($kp, '<a href="' . $base . 'pesanan?cari=' . urlencode($kp) . '" class="text-[#0085ff] font-bold hover:underline">' . $kp . '</a>', $formattedDesc);
                                             }
                                             // Format highlight status transisi jika ada
                                             if (!empty($log['status_baru'])) {

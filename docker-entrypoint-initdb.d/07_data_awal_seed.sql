@@ -18,21 +18,21 @@ INSERT INTO pemilik (nama, no_telepon, email) VALUES
 ON CONFLICT DO NOTHING;
 
 -- 3. SEED KARYAWAN (PETUGAS / KASIR)
-INSERT INTO karyawan (nama, no_telepon, alamat, status_aktif) VALUES
-    ('Reva Rosalina',              '081234567801', 'Jl. Sigura-gura No. 10, Malang', true),
-    ('Firdauzy Nuzula Pramadhani', '081234567802', 'Jl. Soekarno Hatta No. 45, Malang', true),
-    ('Muhammad Nayaka Alfarezel',  '081234567803', 'Jl. Candi Mendut No. 8, Malang', true)
+INSERT INTO karyawan (nama, no_telepon, status_aktif) VALUES
+    ('Reva Rosalina',              '081234567801', true),
+    ('Firdauzy Nuzula Pramadhani', '081234567802', true),
+    ('Muhammad Nayaka Alfarezel',  '081234567803', true)
 ON CONFLICT (no_telepon) DO NOTHING;
 
 -- 4. SEED PELANGGAN (DATA SESUAI FIGMA & TIM PROPOSAL)
-INSERT INTO pelanggan (nama, no_telepon, alamat, tanggal_daftar) VALUES
-    ('Alyssa Naura',        '081234567890', 'Jl. Melati No. 12, Malang',       NOW() - INTERVAL '15 days'),
-    ('Sarah Amanda',        '081234567811', 'Jl. Mawar No. 4, Malang',         NOW() - INTERVAL '10 days'),
-    ('Nadya Alya',          '081234567812', 'Jl. Kamboja No. 9, Malang',       NOW() - INTERVAL '7 days'),
-    ('Areta Neila',         '081234567813', 'Jl. Bunga Coklat No. 2, Malang',  NOW() - INTERVAL '5 days'),
-    ('Ayusha Marella',      '081234567814', 'Jl. Terusan Surabaya, Malang',    NOW() - INTERVAL '4 days'),
-    ('Lucky Satria Utama',  '081234567815', 'Jl. Veteran No. 17, Malang',       NOW() - INTERVAL '2 days'),
-    ('Muhammad Nayaka',     '081234567816', 'Jl. Candi Panggung No. 5, Malang', NOW() - INTERVAL '1 day')
+INSERT INTO pelanggan (nama, no_telepon, tanggal_daftar) VALUES
+    ('Alyssa Naura',        '081234567890', NOW() - INTERVAL '15 days'),
+    ('Sarah Amanda',        '081234567811', NOW() - INTERVAL '10 days'),
+    ('Nadya Alya',          '081234567812', NOW() - INTERVAL '7 days'),
+    ('Areta Neila',         '081234567813', NOW() - INTERVAL '5 days'),
+    ('Ayusha Marella',      '081234567814', NOW() - INTERVAL '4 days'),
+    ('Lucky Satria Utama',  '081234567815', NOW() - INTERVAL '2 days'),
+    ('Muhammad Nayaka',     '081234567816', NOW() - INTERVAL '1 day')
 ON CONFLICT (no_telepon) DO NOTHING;
 
 -- 5. SEED PENGGUNA (AKUN LOGIN SISTEM)

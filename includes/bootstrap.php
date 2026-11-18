@@ -25,7 +25,4 @@ if (!isset($base)) {
 
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/csrf.php';
-// Halaman yang tidak butuh database (login default, dashboard) set $tanpaDb = true sebelum require bootstrap.
-if (empty($tanpaDb)) {
-    require_once __DIR__ . '/koneksi.php';   // menghasilkan $pdo
-}
+require_once __DIR__ . '/koneksi.php';   // menghasilkan $pdo

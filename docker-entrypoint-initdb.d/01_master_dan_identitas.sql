@@ -11,14 +11,13 @@ CREATE TABLE IF NOT EXISTS pelanggan (
     id_pelanggan    SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
-    alamat          VARCHAR(255),
+    alamat          TEXT,
     tanggal_daftar  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 COMMENT ON TABLE pelanggan IS 'Menyimpan profil pelanggan laundry';
 COMMENT ON COLUMN pelanggan.nama IS 'Nama lengkap pelanggan';
 COMMENT ON COLUMN pelanggan.no_telepon IS 'Nomor HP / WhatsApp pelanggan';
-COMMENT ON COLUMN pelanggan.alamat IS 'Alamat domisili pelanggan';
 COMMENT ON COLUMN pelanggan.tanggal_daftar IS 'Waktu registrasi pertama kali';
 
 -- 2. TABEL PEMILIK
@@ -38,7 +37,6 @@ CREATE TABLE IF NOT EXISTS karyawan (
     id_karyawan     SERIAL PRIMARY KEY,
     nama            VARCHAR(100) NOT NULL,
     no_telepon      VARCHAR(20)  NOT NULL UNIQUE,
-    alamat          VARCHAR(255),
     status_aktif    BOOLEAN      NOT NULL DEFAULT TRUE
 );
 

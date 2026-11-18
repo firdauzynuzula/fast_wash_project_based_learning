@@ -4,7 +4,6 @@
  * Sesuai desain Figma (Dashboard-Karyawan.png)
  */
 $title = 'Dasbor';
-$tanpaDb = true;
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -36,9 +35,9 @@ $antrianPengerjaan = [
         'nama_pelanggan' => 'Nadya Alya',
         'layanan'        => 'Cuci + Setrika',
         'berat_kg'       => 3,
-        'status'         => 'dicuci',
-        'badge_label'    => 'Dicuci',
-        'badge_class'    => 'bg-sky-50 text-sky-600 border border-sky-100',
+        'status'         => 'diproses',
+        'badge_label'    => 'Diproses',
+        'badge_class'    => 'bg-blue-50 text-blue-600 border border-blue-100',
     ],
     [
         'id_pesanan'     => 2,
@@ -47,7 +46,7 @@ $antrianPengerjaan = [
         'layanan'        => 'Cuci Kering',
         'berat_kg'       => 2,
         'status'         => 'selesai',
-        'badge_label'    => 'Siap Diambil',
+        'badge_label'    => 'Selesai',
         'badge_class'    => 'bg-emerald-50 text-emerald-600 border border-emerald-100',
     ],
     [
@@ -56,9 +55,9 @@ $antrianPengerjaan = [
         'nama_pelanggan' => 'Rizky Pratama',
         'layanan'        => 'Cuci + Setrika',
         'berat_kg'       => 4,
-        'status'         => 'disetrika',
-        'badge_label'    => 'Disetrika',
-        'badge_class'    => 'bg-amber-50 text-amber-600 border border-amber-100',
+        'status'         => 'diproses',
+        'badge_label'    => 'Diproses',
+        'badge_class'    => 'bg-blue-50 text-blue-600 border border-blue-100',
     ],
     [
         'id_pesanan'     => 4,
@@ -169,7 +168,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="lg:col-span-2 bg-white rounded-2xl lg:rounded-3xl p-4 sm:p-5 shadow-xs border border-slate-100 flex flex-col justify-between min-h-0">
             <div class="shrink-0 flex items-center justify-between pb-2.5 border-b border-slate-100">
                 <h2 class="text-base font-bold text-slate-800">Antrian Pengerjaan</h2>
-                <a href="<?php echo $base; ?>transaksi/status" class="text-xs sm:text-sm font-semibold text-[#0085ff] hover:underline">Lihat Semua</a>
+                <a href="<?php echo $base; ?>pesanan" class="text-xs sm:text-sm font-semibold text-[#0085ff] hover:underline">Lihat Semua</a>
             </div>
 
             <div class="flex-1 flex flex-col justify-around divide-y divide-slate-100 my-1 overflow-hidden">

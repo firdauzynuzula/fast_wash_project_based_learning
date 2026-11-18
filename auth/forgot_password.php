@@ -1,6 +1,6 @@
 <?php
-$tanpaDb = true;
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/auth_db.php';
 require_once __DIR__ . '/../includes/mailer.php';
 
 // Sudah login -> langsung ke dashboard
@@ -12,7 +12,7 @@ if (isset($_SESSION['user_id'])) {
 $error       = '';
 $success     = '';
 $demoLink    = '';
-$targetEmail = 'to88000111@gmail.com'; // Default contoh untuk testing dummy
+$targetEmail = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -23,28 +23,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $targetEmail = $email;
 
-        // 1. Buat token aman acak
-        $plainToken = bin2hex(random_bytes(24));
+        // Buat token reset berbasis database PostgreSQL
+        $resetData = buat_token_reset_password($pdo, $email);
 
-        // 2. Simpan token (Sesi + Cache Server agar kebal klik dari Gmail)
-        simpan_reset_token($email, $plainToken, time() + 3600);
+        if ($resetData !== null) {
+            $plainToken = $resetData['plain_token'];
+            $nama       = $resetData['nama'];
 
-        // 3. Susun URL Reset Kata Sandi
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-        $host     = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
-        $appUrl   = rtrim(getenv('APP_URL') ?: ($protocol . $host), '/');
+            // Susun URL Reset Kata Sandi
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+            $host     = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
+            $appUrl   = rtrim(getenv('APP_URL') ?: ($protocol . $host), '/');
 
-        $resetUrl = $appUrl . '/auth/reset_password?token=' . $plainToken;
+            $resetUrl = $appUrl . '/auth/reset_password?token=' . urlencode($plainToken);
 
-        // 4. Kirim email via Brevo REST API
-        $mailResult = kirim_email_reset_password($email, 'Pengguna Fast Wash', $resetUrl);
+            // Kirim email via Brevo REST API
+            $mailResult = kirim_email_reset_password($email, $nama, $resetUrl);
 
-        if ($mailResult['success'] && empty($mailResult['demo_mode'])) {
-            $success = "Tautan verifikasi reset kata sandi telah berhasil dikirim ke <strong>" . e($email) . "</strong> via Brevo API. Silakan periksa Kotak Masuk atau folder Spam Anda.";
+            if ($mailResult['success'] && empty($mailResult['demo_mode'])) {
+                $success = "Tautan verifikasi reset kata sandi telah berhasil dikirim ke <strong>" . e($email) . "</strong>. Silakan periksa Kotak Masuk atau folder Spam email Anda.";
+            } else {
+                // Mode Demo / Fallback jika BREVO_API_KEY di .env belum diset
+                $success = "Permintaan reset kata sandi berhasil diproses untuk <strong>" . e($email) . "</strong>.";
+                $demoLink = $resetUrl;
+            }
         } else {
-            // Mode Demo / Fallback
-            $success = "Permintaan reset kata sandi berhasil diproses untuk <strong>" . e($email) . "</strong>.";
-            $demoLink = $resetUrl;
+            // Anti user-enumeration: jangan bocorkan apakah email ada atau tidak
+            $success = "Jika alamat email <strong>" . e($email) . "</strong> terdaftar sebagai staf aktif, tautan verifikasi telah dikirimkan. Silakan periksa Kotak Masuk atau folder Spam Anda.";
         }
     }
 }
@@ -89,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div>Pengirim: <code><?php echo e(getenv('MAIL_FROM_EMAIL') ?: 'support@fastwash.web.id'); ?></code></div>
                     <div>Layanan: <span class="font-semibold text-blue-700">Brevo REST API</span></div>
-                    <div>Status: <span class="font-semibold text-emerald-700">Mode Demo & Sesi Aktif</span></div>
+                    <div>Status: <span class="font-semibold text-emerald-700">Database PostgreSQL Aktif</span></div>
                 </div>
             </div>
         </section>
@@ -103,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <p class="text-sm font-bold text-[#1668dc]">Verifikasi Email</p>
             <h2 class="mt-1 text-3xl font-extrabold text-[#16305b]">Lupa Kata Sandi</h2>
-            <p class="mt-2 text-sm text-[#6b7a90]">Masukkan email penerima di bawah ini untuk mengirim tautan reset.</p>
+            <p class="mt-2 text-sm text-[#6b7a90]">Masukkan email akun staf atau pemilik untuk menerima tautan pemulihan.</p>
 
             <?php if (!empty($error)): ?>
             <div role="alert" class="mt-5 rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 border border-red-200">
@@ -133,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
 
                 <div>
-                    <label for="email" class="block mb-2 text-sm font-medium text-gray-900">Email Penerima</label>
+                    <label for="email" class="block mb-2 text-sm font-medium text-gray-900">Email Akun</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 inset-s-0 flex items-center ps-3.5 pointer-events-none text-gray-500">
                             <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -142,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <input id="email" name="email" type="email" autocomplete="email" required
                                value="<?php echo e($targetEmail); ?>"
-                               placeholder="to88000111@gmail.com"
+                               placeholder="karyawan@fastwash.com"
                                class="block w-full ps-10 pe-3.5 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-blue-700 focus:border-blue-700 shadow-xs placeholder:text-gray-400">
                     </div>
                 </div>

@@ -81,7 +81,6 @@ CREATE OR REPLACE VIEW v_rekap_pelanggan AS
 SELECT pl.id_pelanggan,
        pl.nama           AS nama_pelanggan,
        pl.no_telepon,
-       pl.alamat,
        pl.tanggal_daftar,
        (SELECT COUNT(*) FROM pesanan p
          WHERE p.id_pelanggan = pl.id_pelanggan) AS total_pesanan,

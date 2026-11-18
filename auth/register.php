@@ -1,18 +1,12 @@
 <?php
-$tanpaDb = true;
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/auth_db.php';
 
 // Sudah login -> langsung ke dashboard.
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . $base . 'dashboard');
     exit;
 }
-
-// Data dummy akun yang dianggap sudah terdaftar (tanpa database).
-$dummyRegisteredEmails = [
-    'admin@fastwash.com',
-    'fastwash@gmail.com',
-];
 
 $error   = $_SESSION['flash_error'] ?? '';
 $success = $_SESSION['flash_success'] ?? '';
@@ -22,7 +16,7 @@ $oldNama       = '';
 $oldEmail      = '';
 $oldNoWhatsapp = '';
 
-// Proses form register demo jika metode POST
+// Proses form register karyawan jika metode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
@@ -41,8 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Semua kolom wajib diisi.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format email tidak valid.';
-    } elseif (in_array(strtolower($email), $dummyRegisteredEmails, true)) {
-        $error = 'Email sudah terdaftar (data dummy).';
     } elseif (strlen($password) < 8) {
         $error = 'Kata sandi minimal 8 karakter.';
     } elseif ($password !== $passwordConfirm) {
@@ -50,16 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$setuju) {
         $error = 'Anda harus menyetujui Ketentuan Layanan & Privasi Fast Wash.';
     } else {
-        // Demo saja: simpan ke session sementara (tidak disimpan ke database).
-        $_SESSION['dummy_registered_user'] = [
-            'nama_lengkap' => $nama,
-            'email'        => $email,
-            'no_whatsapp'  => $noWhatsapp,
-        ];
-        $success       = 'Pendaftaran demo berhasil untuk "' . $nama . '" (' . $email . '). Data tidak disimpan ke database.';
-        $oldNama       = '';
-        $oldEmail      = '';
-        $oldNoWhatsapp = '';
+        $hasil = daftarkan_karyawan($pdo, $nama, $email, $noWhatsapp, $password);
+        if ($hasil['success']) {
+            $_SESSION['flash_success'] = $hasil['message'];
+            header('Location: ' . $base . 'auth/login');
+            exit;
+        } else {
+            $error = $hasil['message'];
+        }
     }
 }
 ?>
@@ -68,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fast Wash — Buat Akun Baru</title>
+    <title>Fast Wash — Pendaftaran Akun Karyawan</title>
     <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
 </head>
 <body class="min-h-screen overflow-hidden bg-[#E2E8F0] flex items-center justify-center p-4">
@@ -95,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Panel kanan: form buat akun baru -->
         <section class="p-10 flex flex-col justify-center">
-            <h2 class="text-3xl font-extrabold text-[#16305b]">Buat Akun Baru</h2>
+            <h2 class="text-3xl font-extrabold text-[#16305b]">Daftar Akun Karyawan</h2>
+            <p class="mt-1 text-sm text-[#6b7a90]">Daftarkan diri Anda sebagai staf operasional atau kasir Fast Wash.</p>
 
             <?php if (!empty($error)): ?>
             <p role="alert" class="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-700"><?php echo e($error); ?></p>
@@ -201,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <button type="submit"
                         class="w-full cursor-pointer rounded-lg bg-[#1668dc] py-2.5 font-semibold text-white transition-colors hover:bg-[#1259c4]">
-                    Daftar Sekarang
+                    Daftar Sebagai Karyawan
                 </button>
             </form>
 

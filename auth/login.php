@@ -1,6 +1,11 @@
 <?php
-$tanpaDb = true;
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/auth_db.php';
+
+// Jika belum login, coba pulihkan dari cookie Remember-Me
+if (!isset($_SESSION['user_id']) && !empty($pdo)) {
+    pulihkan_dari_cookie($pdo);
+}
 
 // Sudah login -> langsung ke dashboard.
 if (isset($_SESSION['user_id'])) {
@@ -13,24 +18,26 @@ $error   = $_SESSION['flash_error'] ?? '';
 $success = $_SESSION['flash_success'] ?? '';
 unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
+$selectedRole = 'karyawan';
+
 // Proses form login jika metode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../includes/auth_default.php';
     csrf_check();
 
-    $username = trim($_POST['username'] ?? '');
-    $password = (string) ($_POST['password'] ?? '');
+    $username     = trim($_POST['username'] ?? '');
+    $password     = (string) ($_POST['password'] ?? '');
+    $selectedRole = in_array($_POST['role'] ?? '', ['pemilik', 'karyawan'], true) ? $_POST['role'] : 'karyawan';
+    $ingat        = isset($_POST['ingat']);
 
-    if (cek_login_default($username, $password)) {
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = 1;
-        $_SESSION['nama']    = 'Admin';
-        $_SESSION['role']    = 'admin';
+    $user = verifikasi_login($pdo, $username, $password, $selectedRole);
+
+    if ($user) {
+        mulai_sesi($pdo, $user, $ingat);
         header('Location: ' . $base . 'dashboard');
         exit;
     }
 
-    $error = 'Username atau kata sandi salah.';
+    $error = 'Email/nomor HP, kata sandi, atau peran salah.';
 }
 ?>
 <!DOCTYPE html>
@@ -70,10 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="mt-2 text-sm text-[#6b7a90]">Pilih peran Anda untuk melihat ruang kerja yang tepat.</p>
 
             <div class="mt-6 grid grid-cols-2 rounded-full bg-[#eaf1fb] p-1 text-sm font-semibold" role="group" aria-label="Pilih peran">
-                <button type="button" data-role="pemilik" aria-pressed="false"
-                        class="js-role cursor-pointer py-2 text-center rounded-full text-[#16305b]">Pemilik</button>
-                <button type="button" data-role="karyawan" aria-pressed="true"
-                        class="js-role cursor-pointer py-2 text-center rounded-full bg-white text-[#1668dc] shadow-sm">Karyawan</button>
+                <button type="button" data-role="pemilik" aria-pressed="<?php echo $selectedRole === 'pemilik' ? 'true' : 'false'; ?>"
+                        class="js-role cursor-pointer py-2 text-center rounded-full <?php echo $selectedRole === 'pemilik' ? 'bg-white text-[#1668dc] shadow-sm' : 'text-[#16305b]'; ?>">Pemilik</button>
+                <button type="button" data-role="karyawan" aria-pressed="<?php echo $selectedRole === 'karyawan' ? 'true' : 'false'; ?>"
+                        class="js-role cursor-pointer py-2 text-center rounded-full <?php echo $selectedRole === 'karyawan' ? 'bg-white text-[#1668dc] shadow-sm' : 'text-[#16305b]'; ?>">Karyawan</button>
             </div>
 
             <?php if (!empty($success)): ?>
@@ -89,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <form action="" method="post" class="mt-6 space-y-5">
                 <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
-                <input type="hidden" name="role" id="role" value="karyawan">
+                <input type="hidden" name="role" id="role" value="<?php echo e($selectedRole); ?>">
 
                 <div>
                     <label for="email" class="block mb-2.5 text-sm font-medium text-gray-900">Email atau nomor HP</label>
@@ -140,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
             <p class="mt-6 text-center text-sm text-[#6b7a90]">
-                Pelanggan baru? <a href="<?php echo $base; ?>auth/register" class="font-semibold text-[#1668dc] hover:underline">Buat akun</a>
+                Karyawan baru? <a href="<?php echo $base; ?>auth/register" class="font-semibold text-[#1668dc] hover:underline">Daftar akun</a>
             </p>
         </section>
     </div>
