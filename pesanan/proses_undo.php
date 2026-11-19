@@ -25,7 +25,6 @@ if ($idPesanan <= 0) {
     exit;
 }
 
-<<<<<<< HEAD
 // Ambil status saat ini
 $stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar FROM pesanan WHERE id_pesanan = :id");
 $stmt->execute(['id' => $idPesanan]);
@@ -48,14 +47,16 @@ $reverseMap = [
     'dikeringkan' => 'diterima',
     'disetrika'   => 'diterima',
     'diterima'    => null, // tidak bisa undo dari Diterima
-=======
-// Alur mundur satu tahap
+];
+
 $prevMap = [
-    'diterima' => null,
-    'diproses' => 'diterima',
-    'selesai'  => 'diproses',
-    'diambil'  => 'selesai',
->>>>>>> 738207f5a561bc53f2efbf047ce20259c6fb5d77
+    'diterima'    => null,
+    'diproses'    => 'diterima',
+    'dicuci'      => 'diterima',
+    'dikeringkan' => 'diterima',
+    'disetrika'   => 'diterima',
+    'selesai'     => 'diproses',
+    'diambil'     => 'selesai',
 ];
 
 $idKaryawan = (int) ($_SESSION['id_karyawan'] ?? $_SESSION['user_id'] ?? 1);

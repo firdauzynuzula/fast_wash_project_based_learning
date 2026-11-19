@@ -8,19 +8,14 @@ $breadcrumb = [
     ['label' => 'Pesanan Baru', 'url' => ''],
 ];
 
-<<<<<<< HEAD
 // Ambil daftar pelanggan terdaftar
 $stmtPelanggan = $pdo->query("SELECT id_pelanggan, nama, no_telepon FROM pelanggan ORDER BY nama ASC");
 $pelanggan = $stmtPelanggan->fetchAll();
-=======
-// Pelanggan terdaftar
-$pelanggan = $pdo->query("SELECT id_pelanggan, nama, no_telepon FROM pelanggan ORDER BY nama ASC")->fetchAll();
 $pelangganJs = array_map(fn($p) => [
     'id'   => (int) $p['id_pelanggan'],
     'nama' => $p['nama'],
     'telp' => $p['no_telepon'],
 ], $pelanggan);
->>>>>>> 738207f5a561bc53f2efbf047ce20259c6fb5d77
 
 // Layanan aktif yang unik
 $sqlLayanan = "SELECT * FROM (
@@ -88,26 +83,15 @@ function renderKartuPesanan($i, array $layanan): string
                         <button type="button" onclick="ubahBerat(this, 1)">+</button>
                     </div>
                 </div>
-                <div>
-                    <label class="tb-lbl">Pembayaran</label>
-                    <div class="tb-pills">
-                        <?php foreach (['tunai' => 'Tunai', 'qris' => 'QRIS', 'transfer' => 'Transfer'] as $val => $lbl): ?>
-                            <label class="tb-pill">
-                                <input type="radio" name="orders[<?php echo $i; ?>][metode_pembayaran]" value="<?php echo $val; ?>" data-metode="<?php echo $lbl; ?>">
-                                <span><?php echo $lbl; ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
 
-            <label class="tb-cepat">
-                <span>
-                    <span class="tb-cepat-t">Layanan Cepat</span>
-                    <span class="tb-cepat-s">Siap dalam 6 jam | +Rp 10,000</span>
-                </span>
-                <input type="checkbox" class="cek-cepat tb-check" name="orders[<?php echo $i; ?>][layanan_cepat]" value="1">
-            </label>
+                <label class="tb-cepat">
+                    <span>
+                        <span class="tb-cepat-t">Layanan Cepat</span>
+                        <span class="tb-cepat-s">Siap dalam 6 jam | +Rp 10,000</span>
+                    </span>
+                    <input type="checkbox" class="cek-cepat tb-check" name="orders[<?php echo $i; ?>][layanan_cepat]" value="1">
+                </label>
+            </div>
 
             <label class="tb-lbl" style="margin-top: 22px;">Catatan</label>
             <textarea class="tb-ta" name="orders[<?php echo $i; ?>][catatan]" placeholder="noda, bahan halus, pewangi"></textarea>
@@ -121,7 +105,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-    .tb-grid { display: grid; grid-template-columns: 2.07fr 1fr; gap: 24px; align-items: start; margin-bottom: 24px; }
+    .tb-grid { display: grid; grid-template-columns: 2.07fr 1fr; gap: 24px; align-items: start; margin-bottom: 48px; }
     .tb-left { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
     .tb-list { display: flex; flex-direction: column; gap: 24px; }
     .tb-card { background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 1px 3px rgba(15,23,42,.04); box-sizing: border-box; }
@@ -131,68 +115,108 @@ require_once __DIR__ . '/../includes/header.php';
     .tb-lbl { display: block; font-size: 12px; color: #374151; margin-bottom: 8px; }
 
     /* Pelanggan */
-    .tb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+    .tb-pel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .tb-link { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .tb-link:hover { text-decoration: underline; }
+    .tb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 14px; }
     .tb-rel { position: relative; }
-    .tb-inp { width: 100%; height: 40px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; padding: 0 44px 0 16px; font-size: 13px; color: #374151; outline: none; font-family: inherit; }
-    .tb-inp.tel { padding: 0 16px 0 42px; }
+    .tb-inp { width: 100%; height: 42px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; padding: 0 16px; font-size: 13px; color: #374151; outline: none; font-family: inherit; }
+    .tb-inp.sel { appearance: none; -webkit-appearance: none; -moz-appearance: none; padding-right: 44px; cursor: pointer; }
+    .tb-inp.sel.kosong { color: #9ca3af; }
+    .tb-inp.tel { padding-left: 42px; }
     .tb-inp::placeholder { color: #9ca3af; }
     .tb-inp:focus, .tb-ta:focus { border-color: #0085ff; box-shadow: 0 0 0 3px rgba(0,133,255,.12); }
+    .tb-inp[readonly] { background: #fff; cursor: default; }
     .tb-ico-l { position: absolute; top: 0; bottom: 0; left: 14px; display: flex; align-items: center; pointer-events: none; }
     .tb-ico-r { position: absolute; top: 0; bottom: 0; right: 16px; display: flex; align-items: center; pointer-events: none; }
-    input[list]::-webkit-calendar-picker-indicator { display: none !important; }
 
     /* Kartu layanan */
     .tb-svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     .tb-svc { position: relative; display: block; cursor: pointer; }
     .tb-svc input { position: absolute; opacity: 0; pointer-events: none; }
-    .tb-svc-body { display: flex; flex-direction: column; justify-content: space-between; min-height: 106px; box-sizing: border-box; padding: 14px 14px 12px; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+    .tb-svc-body { display: flex; flex-direction: column; justify-content: space-between; min-height: 116px; box-sizing: border-box; padding: 14px 14px 12px; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; transition: border-color .15s, box-shadow .15s; }
     .tb-svc:hover .tb-svc-body { border-color: #93c5fd; }
     .tb-svc input:checked + .tb-svc-body { border-color: #0085ff; box-shadow: 0 0 0 1px #0085ff; }
     .tb-svc-nama { display: block; font-size: 12px; font-weight: 700; color: #111827; }
     .tb-svc-ket { display: block; font-size: 11px; color: #9ca3af; margin-top: 2px; }
 
-    /* Kotak dalam */
-    .tb-inner { margin-top: 22px; border: 1px solid #eef2f7; border-radius: 16px; padding: 22px; box-sizing: border-box; }
-    .tb-inner-top { display: grid; grid-template-columns: auto 1fr; gap: 36px; align-items: start; }
-    .tb-step { display: flex; align-items: center; gap: 8px; width: 210px; max-width: 100%; box-sizing: border-box; border: 1px solid #eef2f7; border-radius: 12px; padding: 5px; }
+    /* Kotak dalam: Berat + Layanan Cepat + Catatan */
+    .tb-inner { margin-top: 22px; border: 1px solid #eef2f7; border-radius: 16px; padding: 22px 24px 24px; box-sizing: border-box; }
+    .tb-inner-top { display: grid; grid-template-columns: 228px 1fr; gap: 22px; align-items: end; }
+    .tb-step { display: flex; align-items: center; gap: 8px; box-sizing: border-box; border: 1px solid #eef2f7; border-radius: 12px; padding: 5px; }
     .tb-step button { width: 34px; height: 34px; border: 0; border-radius: 10px; background: #e8eff8; color: #374151; font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0; }
     .tb-step button:hover { background: #d9e6f5; }
     .tb-step .berat-text { flex: 1; text-align: center; font-size: 13px; font-weight: 700; color: #111827; }
-    .tb-pills { display: flex; flex-wrap: wrap; gap: 10px; }
-    .tb-pill { cursor: pointer; }
-    .tb-pill input { position: absolute; opacity: 0; pointer-events: none; }
-    .tb-pill span { display: block; min-width: 83px; box-sizing: border-box; text-align: center; padding: 9px 18px; border-radius: 10px; background: #e8eff8; border: 1.5px solid transparent; font-size: 12px; font-weight: 500; color: #374151; }
-    .tb-pill input:checked + span { background: #fff; border-color: #0085ff; color: #0085ff; }
 
-    .tb-cepat { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f6f9fd; border-radius: 12px; padding: 16px 18px; margin-top: 20px; cursor: pointer; }
+    .tb-cepat { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f6f9fd; border-radius: 12px; padding: 18px 22px; cursor: pointer; box-sizing: border-box; }
     .tb-cepat-t { display: block; font-size: 12px; font-weight: 700; color: #111827; }
     .tb-cepat-s { display: block; font-size: 11px; color: #6b7280; margin-top: 3px; }
     .tb-check { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; flex-shrink: 0; margin: 0; }
     .tb-check:checked { background: #0085ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/70% no-repeat; border-color: #0085ff; }
-    .tb-ta { width: 100%; height: 84px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px 16px; font-size: 13px; color: #374151; outline: none; resize: vertical; font-family: inherit; background: #fff; }
+    .tb-ta { width: 100%; height: 92px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px 16px; font-size: 13px; color: #374151; outline: none; resize: vertical; font-family: inherit; background: #fff; }
     .tb-ta::placeholder { color: #9ca3af; }
 
     /* Kolom kanan */
     .tb-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .tb-btn-add { display: block; width: 100%; height: 42px; box-sizing: border-box; border: 1.5px solid #0085ff; border-radius: 14px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+    .tb-btn-add { display: block; width: 100%; height: 46px; box-sizing: border-box; border: 1.5px solid #0085ff; border-radius: 14px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .tb-btn-add:hover { background: #f0f7ff; }
-    .tb-sum { padding: 22px; }
-    .tb-sum-title { padding-bottom: 14px; border-bottom: 1px solid #eef2f7; margin-bottom: 16px; }
+    .tb-sum { padding: 24px; }
+    .tb-sum-title { padding-bottom: 16px; border-bottom: 1px solid #eef2f7; margin-bottom: 18px; }
     .tb-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin-bottom: 14px; line-height: 1.3; min-height: 16px; }
-    .tb-row .k { color: #374151; flex-shrink: 0; }
-    .tb-row .v { color: #111827; font-weight: 500; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+    .tb-row .k { color: #374151; }
+    .tb-row .v { color: #111827; font-weight: 500; text-align: right; max-width: 65%; word-break: break-word; overflow-wrap: anywhere; }
     .tb-sep { border: 0; border-top: 1px solid #eef2f7; margin: 4px 0 14px; }
-    .tb-total { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 18px; border-top: 1px solid #eef2f7; min-height: 20px; }
+    .tb-total { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 20px; border-top: 1px solid #eef2f7; min-height: 20px; }
     .tb-total .k { font-size: 13px; font-weight: 700; color: #111827; }
     .tb-total .v { font-size: 15px; font-weight: 700; color: #0085ff; }
-    .tb-btn-lunas { display: block; width: 100%; height: 40px; box-sizing: border-box; margin-top: 20px; border: 1.5px solid #0085ff; border-radius: 12px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+
+    .tb-pay-lbl { font-size: 12px; color: #374151; margin: 18px 0 10px; }
+    .tb-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .tb-pill { cursor: pointer; display: block; }
+    .tb-pill input { position: absolute; opacity: 0; pointer-events: none; }
+    .tb-pill span { display: block; box-sizing: border-box; text-align: center; padding: 10px 0; border-radius: 12px; background: #e8eff8; border: 1.5px solid transparent; font-size: 12px; font-weight: 500; color: #374151; }
+    .tb-pill input:checked + span { background: #fff; border-color: #0085ff; color: #0085ff; }
+
+    .tb-btn-lunas { display: block; width: 100%; height: 44px; box-sizing: border-box; margin-top: 22px; border: 1.5px solid #0085ff; border-radius: 24px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .tb-btn-lunas.aktif { background: #e6f2ff; }
     .tb-btn-lunas.belum { border-color: #f59e0b; color: #d97706; background: #fffbeb; }
-    .tb-btn-buat { display: block; width: 100%; height: 44px; box-sizing: border-box; margin-top: 12px; border: 0; border-radius: 12px; background: #0085ff; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,133,255,.28); font-family: inherit; }
+    .tb-btn-buat { display: block; width: 100%; height: 46px; box-sizing: border-box; margin-top: 12px; border: 0; border-radius: 24px; background: #0085ff; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,133,255,.28); font-family: inherit; }
     .tb-btn-buat:hover { background: #0070d8; }
 
     .tb-alert { margin-bottom: 20px; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; }
     .tb-alert button { background: none; border: 0; color: #ef4444; font-weight: 700; font-size: 18px; cursor: pointer; }
+
+
+    /* Modal Tambah Pelanggan */
+    .pm-overlay { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(15,23,42,.38); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 16px; }
+    .pm-overlay.show { display: flex; }
+    .pm-box { background: #fff; border-radius: 24px; width: 100%; max-width: 560px; padding: 32px; box-sizing: border-box; box-shadow: 0 24px 60px rgba(15,23,42,.25); position: relative; }
+    .pm-title { font-size: 24px; font-weight: 700; color: #111827; margin: 0; }
+    .pm-desc { font-size: 14px; color: #6b7280; margin: 6px 0 26px; }
+    .pm-close { position: absolute; top: 28px; right: 28px; background: none; border: 0; cursor: pointer; padding: 4px; color: #6b7280; display: flex; }
+    .pm-close:hover { color: #111827; }
+    .pm-lbl { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+    .pm-lbl em { color: #ef4444; font-style: normal; margin-left: 3px; }
+    .pm-field { position: relative; margin-bottom: 22px; }
+    .pm-field svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .pm-inp { width: 100%; height: 48px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0 16px 0 46px; font-size: 14px; color: #111827; outline: none; font-family: inherit; background: #fff; }
+    .pm-inp::placeholder { color: #9ca3af; }
+    .pm-inp:focus { border-color: #0085ff; box-shadow: 0 0 0 3px rgba(0,133,255,.12); }
+    .pm-inp.err { border-color: #ef4444; }
+    .pm-error { display: none; font-size: 13px; color: #dc2626; margin: -8px 0 16px; }
+    .pm-error.show { display: block; }
+    .pm-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 30px; }
+    .pm-btn { height: 46px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; padding: 0 30px; }
+    .pm-btn-batal { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+    .pm-btn-batal:hover { background: #f9fafb; }
+    .pm-btn-simpan { background: #0085ff; border: 1px solid #0085ff; color: #fff; box-shadow: 0 4px 10px rgba(0,133,255,.25); }
+    .pm-btn-simpan:hover { background: #0070d8; }
+    .pm-btn-simpan:disabled { opacity: .7; cursor: wait; }
+
+    .pm-ok { max-width: 600px; text-align: center; padding: 60px 32px 56px; }
+    .pm-ok-ico { width: 74px; height: 74px; border-radius: 50%; background: #0085ff; margin: 0 auto 44px; display: flex; align-items: center; justify-content: center; }
+    .pm-ok-title { font-size: 24px; font-weight: 700; color: #0f172a; margin: 0; }
+    .pm-ok-sub { font-size: 14px; color: #6b7280; margin: 6px 0 0; }
 
     @media (max-width: 1000px) {
         .tb-grid { grid-template-columns: 1fr; }
@@ -218,20 +242,28 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Pelanggan -->
         <div class="tb-card">
-            <h2 class="tb-h">Pelanggan</h2>
+            <div class="tb-pel-head">
+                <h2 class="tb-h">Pelanggan</h2>
+                <button type="button" id="btnModePelanggan" class="tb-link" onclick="bukaModalPelanggan()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                    <span>Tambah Pelanggan</span>
+                </button>
+            </div>
+
             <div class="tb-two">
                 <div>
                     <label class="tb-lbl">Nama Lengkap</label>
                     <div class="tb-rel">
-                        <input type="hidden" name="id_pelanggan" id="inputIdPelanggan" value="">
-                        <input type="text" name="nama_baru" id="inputNama" list="listPelanggan" autocomplete="off"
-                               placeholder="Pilih Nama Pelanggan" oninput="pelangganInput()" class="tb-inp">
-                        <datalist id="listPelanggan">
+                        <!-- Mode pelanggan terdaftar -->
+                        <select name="id_pelanggan" id="selectPelanggan" class="tb-inp sel kosong" onchange="pilihPelangganChange()">
+                            <option value="">Pilih Nama Pelanggan</option>
                             <?php foreach ($pelanggan as $p): ?>
-                                <option value="<?php echo e($p['nama']); ?>"></option>
+                                <option value="<?php echo (int) $p['id_pelanggan']; ?>"
+                                        data-nama="<?php echo e($p['nama']); ?>"
+                                        data-telepon="<?php echo e($p['no_telepon']); ?>"><?php echo e($p['nama']); ?></option>
                             <?php endforeach; ?>
-                        </datalist>
-                        <div class="tb-ico-r">
+                        </select>
+                        <div class="tb-ico-r" id="chevPelanggan">
                             <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                     </div>
@@ -242,7 +274,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="tb-ico-l">
                             <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                         </div>
-                        <input type="text" name="telepon_baru" id="inputTelepon" placeholder="0812 3456 7890" class="tb-inp tel">
+                        <input type="text" name="telepon_baru" id="inputTelepon" class="tb-inp tel" placeholder="0812 3456 7890" readonly>
                     </div>
                 </div>
             </div>
@@ -263,14 +295,19 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div id="ringkasanItems"></div>
 
-            <hr class="tb-sep">
-            <div class="tb-row"><span class="k">Pembayaran</span><span class="v" id="ringkasanMetodeBayar"></span></div>
-            <div class="tb-row"><span class="k">Status Pembayaran</span><span class="v" id="ringkasanStatusBayar"></span></div>
-            <div class="tb-row"><span class="k">Pesanan Siap</span><span class="v" id="ringkasanPesananSiap"></span></div>
-
             <div class="tb-total">
                 <span class="k">Total</span>
                 <span class="v" id="ringkasanTotalHarga"></span>
+            </div>
+
+            <div class="tb-pay-lbl">Pembayaran</div>
+            <div class="tb-pills">
+                <?php foreach (['tunai' => 'Tunai', 'qris' => 'QRIS', 'transfer' => 'Transfer'] as $val => $lbl): ?>
+                    <label class="tb-pill">
+                        <input type="radio" name="metode_pembayaran" value="<?php echo $val; ?>" data-metode="<?php echo $lbl; ?>">
+                        <span><?php echo $lbl; ?></span>
+                    </label>
+                <?php endforeach; ?>
             </div>
 
             <button type="button" id="btnStatusBayar" class="tb-btn-lunas" onclick="toggleStatusBayar()">Lunas</button>
@@ -279,11 +316,50 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </form>
 
+<!-- Modal Tambah Pelanggan -->
+<div id="modalPelanggan" class="pm-overlay" onclick="if (event.target === this) tutupModalPelanggan()">
+    <div class="pm-box">
+        <button type="button" class="pm-close" onclick="tutupModalPelanggan()" aria-label="Tutup">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h3 class="pm-title">Tambah Pelanggan</h3>
+        <p class="pm-desc">Masukkan data pelanggan baru untuk mulai mencatat pesanan</p>
+
+        <label class="pm-lbl" for="pmNama">Nama Lengkap<em>*</em></label>
+        <div class="pm-field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>
+            <input type="text" id="pmNama" class="pm-inp" placeholder="Contoh: Alyssa Naura" autocomplete="off">
+        </div>
+
+        <label class="pm-lbl" for="pmTelepon">Nomor WhatsApp<em>*</em></label>
+        <div class="pm-field" style="margin-bottom: 0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            <input type="text" id="pmTelepon" class="pm-inp" placeholder="Contoh: 0812-3456-7890" autocomplete="off" inputmode="tel">
+        </div>
+        <div id="pmError" class="pm-error" style="margin: 12px 0 0;"></div>
+
+        <div class="pm-actions">
+            <button type="button" class="pm-btn pm-btn-batal" onclick="tutupModalPelanggan()">Batal</button>
+            <button type="button" id="pmSimpan" class="pm-btn pm-btn-simpan" onclick="simpanPelanggan()">Simpan Pelanggan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal sukses -->
+<div id="modalPelangganOk" class="pm-overlay">
+    <div class="pm-box pm-ok">
+        <div class="pm-ok-ico">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="pm-ok-title">Pelanggan berhasil ditambahkan</h3>
+        <p class="pm-ok-sub">data pelanggan tersimpan pada daftar pelanggan</p>
+    </div>
+</div>
+
 <!-- Template kartu pesanan tambahan -->
 <template id="tplOrder"><?php echo renderKartuPesanan('__I__', $layanan); ?></template>
 
 <script>
-const pelangganData = <?php echo json_encode($pelangganJs, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 let jumlahPesanan = 1;
 
 const fmt = n => Number(n).toLocaleString('en-US');
@@ -292,45 +368,18 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const baris = (k, v) => `<div class="tb-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
 
 /* ---------- Pelanggan ---------- */
-function pelangganInput() {
-    const nama = document.getElementById('inputNama').value.trim();
-    const tel  = document.getElementById('inputTelepon');
-    const idEl = document.getElementById('inputIdPelanggan');
-    const m = pelangganData.find(p => p.nama.toLowerCase() === nama.toLowerCase());
-
-    if (m) {
-        idEl.value = m.id;
-        tel.value = m.telp || '';
-        tel.readOnly = true;
-    } else {
-        if (tel.readOnly) tel.value = '';
-        idEl.value = '';
-        tel.readOnly = false;
-    }
+function pilihPelangganChange() {
+    const sel = document.getElementById('selectPelanggan');
+    const opt = sel.options[sel.selectedIndex];
+    sel.classList.toggle('kosong', !sel.value);
+    document.getElementById('inputTelepon').value = (opt && opt.value) ? (opt.getAttribute('data-telepon') || '') : '';
     hitungRingkasan();
 }
 
-/* ---------- Scroll ke kartu baru ----------
-   Tidak memakai scrollIntoView(): fungsi itu ikut menggeser elemen induk yang
-   overflow-nya hidden (mis. wrapper layout), sehingga seluruh layout naik dan
-   muncul ruang kosong di bawah. Di sini hanya container yang memang bisa di-scroll
-   yang digeser. */
-function scrollKeKartu(el) {
-    let p = el.parentElement;
-    while (p && p !== document.body && p !== document.documentElement) {
-        const oy = getComputedStyle(p).overflowY;
-        if ((oy === 'auto' || oy === 'scroll') && p.scrollHeight > p.clientHeight) {
-            const top = el.getBoundingClientRect().top - p.getBoundingClientRect().top + p.scrollTop - 24;
-            p.scrollTo({ top: top, behavior: 'smooth' });
-            return;
-        }
-        p = p.parentElement;
-    }
-    const bodyOy = getComputedStyle(document.body).overflowY;
-    const htmlOy = getComputedStyle(document.documentElement).overflowY;
-    if (bodyOy !== 'hidden' && htmlOy !== 'hidden') {
-        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
-    }
+function namaPelanggan() {
+    const sel = document.getElementById('selectPelanggan');
+    const opt = sel.options[sel.selectedIndex];
+    return (opt && opt.value) ? (opt.getAttribute('data-nama') || '') : '';
 }
 
 /* ---------- Tambah kartu pesanan (ke bawah) ---------- */
@@ -340,15 +389,14 @@ function tambahPesanan() {
     jumlahPesanan++;
     hitungRingkasan();
     const cards = document.querySelectorAll('[data-order]');
-    scrollKeKartu(cards[cards.length - 1]);
+    cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ---------- Berat (mulai dari 0) ---------- */
+/* ---------- Berat ---------- */
 function ubahBerat(btn, delta) {
     const card  = btn.closest('[data-order]');
     const input = card.querySelector('.berat-input');
-    let val = parseFloat(input.value);
-    if (isNaN(val)) val = 0;
+    let val = parseFloat(input.value) || 0;
     val = Math.max(0, val + delta);
     input.value = val;
     card.querySelector('.berat-text').textContent = fmtQty(val) + ' kg';
@@ -364,18 +412,15 @@ function toggleStatusBayar() {
 
 /* ---------- Ringkasan: kosong sampai form diisi ---------- */
 function hitungRingkasan() {
-    const nama = document.getElementById('inputNama').value.trim();
+    const nama = namaPelanggan();
+    const cards = document.querySelectorAll('[data-order]');
     let html = '', total = 0, maxJam = 0, adaLayanan = false;
-    const metodeSet = [];
 
-    document.querySelectorAll('[data-order]').forEach((card, n) => {
-        const lay     = card.querySelector('input[data-harga]:checked');
-        const qty     = parseFloat(card.querySelector('.berat-input').value) || 0;
-        const cepat   = card.querySelector('.cek-cepat').checked;
-        const metode  = card.querySelector('input[data-metode]:checked');
-        const catatan = card.querySelector('.tb-ta').value.trim();
-
-        if (metode && !metodeSet.includes(metode.dataset.metode)) metodeSet.push(metode.dataset.metode);
+    cards.forEach((card, n) => {
+        const lay   = card.querySelector('input[data-harga]:checked');
+        const qty   = parseFloat(card.querySelector('.berat-input').value) || 0;
+        const cepat = card.querySelector('.cek-cepat').checked;
+        const catatan = card.querySelector('textarea').value.trim();
 
         if (n > 0) html += '<hr class="tb-sep">';
 
@@ -388,7 +433,7 @@ function hitungRingkasan() {
 
             html += baris('Pelanggan', esc(nama))
                   + baris('Layanan', esc(lay.dataset.nama))
-                  + baris('Berat', `${fmtQty(qty)} kg × Rp ${fmt(harga)}`)
+                  + baris('Berat', qty > 0 ? `${fmtQty(qty)} kg × Rp ${fmt(harga)}` : '')
                   + baris('Layanan Cepat', cepat ? '10,000' : '-')
                   + baris('Catatan', esc(catatan));
         } else {
@@ -400,27 +445,108 @@ function hitungRingkasan() {
         }
     });
 
+    const metode = document.querySelector('input[name="metode_pembayaran"]:checked');
     const status = document.getElementById('inputStatusBayar').value;
+    const siap   = adaLayanan ? (maxJam < 24 ? `dalam ${maxJam} jam` : `dalam ${Math.ceil(maxJam / 24)} hari`) : '';
+
+    if (cards.length > 1) html += '<hr class="tb-sep">';
+    html += baris('Pembayaran', metode ? esc(metode.dataset.metode) : '')
+          + baris('Status Pembayaran', status === 'lunas' ? 'Lunas' : (status === 'belum_lunas' ? 'Belum Lunas' : ''))
+          + baris('Pesanan Siap', siap);
+
     const btn = document.getElementById('btnStatusBayar');
     btn.className = 'tb-btn-lunas' + (status === 'lunas' ? ' aktif' : (status === 'belum_lunas' ? ' belum' : ''));
     btn.textContent = status === 'belum_lunas' ? 'Belum Lunas' : 'Lunas';
 
     document.getElementById('ringkasanItems').innerHTML = html;
-    document.getElementById('ringkasanMetodeBayar').textContent = metodeSet.join(', ');
-    document.getElementById('ringkasanStatusBayar').textContent = status === 'lunas' ? 'Lunas' : (status === 'belum_lunas' ? 'Belum Lunas' : '');
-    document.getElementById('ringkasanPesananSiap').textContent = adaLayanan
-        ? (maxJam < 24 ? `dalam ${maxJam} jam` : `dalam ${Math.ceil(maxJam / 24)} hari`) : '';
     document.getElementById('ringkasanTotalHarga').textContent = adaLayanan ? 'Rp ' + fmt(total) : '';
 }
 
-const formPesanan = document.getElementById('formPesanan');
-formPesanan.addEventListener('change', hitungRingkasan);
-formPesanan.addEventListener('input', hitungRingkasan); // catatan ikut update saat mengetik
 
-formPesanan.addEventListener('submit', function (e) {
-    if (!document.getElementById('inputNama').value.trim()) {
+/* ---------- Modal Tambah Pelanggan ---------- */
+const BASE_URL = <?php echo json_encode($base); ?>;
+const CSRF_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+
+function bukaModalPelanggan() {
+    document.getElementById('pmNama').value = '';
+    document.getElementById('pmTelepon').value = '';
+    pmTampilError('');
+    document.getElementById('modalPelanggan').classList.add('show');
+    setTimeout(() => document.getElementById('pmNama').focus(), 50);
+}
+function tutupModalPelanggan() {
+    document.getElementById('modalPelanggan').classList.remove('show');
+}
+function pmTampilError(pesan, fieldIds) {
+    const el = document.getElementById('pmError');
+    el.textContent = pesan;
+    el.classList.toggle('show', !!pesan);
+    ['pmNama', 'pmTelepon'].forEach(id => document.getElementById(id).classList.remove('err'));
+    (fieldIds || []).forEach(id => document.getElementById(id).classList.add('err'));
+}
+
+async function simpanPelanggan() {
+    const nama = document.getElementById('pmNama').value.trim();
+    const telp = document.getElementById('pmTelepon').value.trim();
+
+    if (!nama) { pmTampilError('Nama lengkap wajib diisi.', ['pmNama']); return; }
+    if (!telp) { pmTampilError('Nomor WhatsApp wajib diisi.', ['pmTelepon']); return; }
+    pmTampilError('');
+
+    const btn = document.getElementById('pmSimpan');
+    btn.disabled = true;
+
+    try {
+        const fd = new FormData();
+        fd.append('csrf', CSRF_TOKEN);
+        fd.append('nama', nama);
+        fd.append('telepon', telp);
+
+        const res = await fetch(BASE_URL + 'pesanan/proses_tambah_pelanggan', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (!data.ok) {
+            pmTampilError(data.message || 'Gagal menyimpan pelanggan.');
+            return;
+        }
+
+        // Tambahkan ke dropdown & langsung pilih
+        const sel = document.getElementById('selectPelanggan');
+        const opt = document.createElement('option');
+        opt.value = data.id;
+        opt.textContent = data.nama;
+        opt.setAttribute('data-nama', data.nama);
+        opt.setAttribute('data-telepon', data.telp);
+        sel.appendChild(opt);
+        sel.value = String(data.id);
+        pilihPelangganChange();
+
+        tutupModalPelanggan();
+        const ok = document.getElementById('modalPelangganOk');
+        ok.classList.add('show');
+        setTimeout(() => ok.classList.remove('show'), 1800);
+    } catch (err) {
+        pmTampilError('Terjadi kesalahan. Silakan coba lagi.');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') tutupModalPelanggan();
+    if (e.key === 'Enter' && document.getElementById('modalPelanggan').classList.contains('show')) {
         e.preventDefault();
-        alert('Silakan pilih atau isi nama pelanggan.');
+        simpanPelanggan();
+    }
+});
+document.getElementById('modalPelangganOk').addEventListener('click', function () { this.classList.remove('show'); });
+
+document.getElementById('formPesanan').addEventListener('change', hitungRingkasan);
+
+document.getElementById('formPesanan').addEventListener('submit', function (e) {
+    if (!namaPelanggan()) {
+        e.preventDefault();
+        alert('Silakan pilih pelanggan atau tambah pelanggan baru.');
         return;
     }
     const kosong = [...document.querySelectorAll('[data-order]')].some(c => !c.querySelector('input[data-harga]:checked'));
@@ -429,10 +555,10 @@ formPesanan.addEventListener('submit', function (e) {
         alert('Silakan pilih layanan pada setiap pesanan.');
         return;
     }
-    const beratKosong = [...document.querySelectorAll('.berat-input')].some(i => (parseFloat(i.value) || 0) < 0.5);
+    const beratKosong = [...document.querySelectorAll('.berat-input')].some(i => !(parseFloat(i.value) > 0));
     if (beratKosong) {
         e.preventDefault();
-        alert('Berat cucian harus lebih dari 0 kg pada setiap pesanan.');
+        alert('Berat cucian harus lebih dari 0 kg.');
     }
 });
 

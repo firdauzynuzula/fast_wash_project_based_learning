@@ -114,8 +114,8 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
     </div>
 
     <!-- Status Pembayaran -->
-    <div style="position: relative; width: 175px; flex: 0 0 175px;">
-        <select name="bayar" onchange="this.form.submit()" style="<?php echo $styleSelect; ?> width: 100%;">
+    <div style="position: relative; min-width: 205px; flex: 0 0 auto;">
+        <select name="bayar" onchange="this.form.submit()" style="<?php echo $styleSelect; ?> width: 100%; white-space: nowrap;">
             <option value="">Status Pembayaran</option>
             <option value="belum_lunas" <?php echo $filterBayar === 'belum_lunas' ? 'selected' : ''; ?>>Belum Lunas</option>
             <option value="lunas" <?php echo $filterBayar === 'lunas' ? 'selected' : ''; ?>>Lunas</option>
@@ -124,7 +124,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
     </div>
 
     <?php if ($cari !== '' || $filterStatus !== '' || $filterBayar !== ''): ?>
-        <a href="<?php echo $base . $listPath; ?>" style="font-size: 12px; font-weight: 600; color: #F43F5E; white-space: nowrap;">Reset</a>
+        <a href="<?php echo $base . $listPath; ?>" style="height: 40px; display: inline-flex; align-items: center; padding: 0 12px; font-size: 14px; font-weight: 600; color: #F43F5E; white-space: nowrap; box-sizing: border-box;">Reset</a>
     <?php endif; ?>
 
     <!-- Tombol Pesanan Baru -->
@@ -144,7 +144,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                     <th scope="col" class="py-4 px-6 font-medium">Kode</th>
                     <th scope="col" class="py-4 px-6 font-medium">Nama Pelanggan</th>
                     <th scope="col" class="py-4 px-6 font-medium text-center">Progres Cucian</th>
-                    <th scope="col" class="py-4 px-6 font-medium text-center">Status Pembayaran</th>
+                    <th scope="col" class="py-4 pl-10 pr-8 font-medium text-right whitespace-nowrap">Status Pembayaran</th>
                     <th scope="col" class="py-4 px-6 font-medium text-center">Update</th>
                 </tr>
             </thead>
@@ -181,7 +181,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                             <td class="py-4 px-6 whitespace-nowrap text-center">
                                 <span class="inline-block px-5 py-1 rounded-full text-xs font-medium <?php echo $badgeProgres[1]; ?>"><?php echo $badgeProgres[0]; ?></span>
                             </td>
-                            <td class="py-4 px-6 whitespace-nowrap text-center">
+                            <td class="py-4 pl-10 pr-8 whitespace-nowrap text-right">
                                 <span class="inline-block px-5 py-1 rounded-full text-xs font-medium <?php echo $badgeBayar[1]; ?>"><?php echo $badgeBayar[0]; ?></span>
                             </td>
                             <td class="py-4 px-6 whitespace-nowrap text-center">
@@ -236,34 +236,70 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
 </div>
 
 <!-- Modal pembayaran -->
+<style>
+    .opsi-metode {
+        position: relative;
+        display: flex; align-items: center; justify-content: center;
+        height: 56px; border: 2px solid #E5E7EB; border-radius: 20px;
+        background: #FFFFFF; cursor: pointer; transition: border-color .15s;
+        font-size: 15px; font-weight: 400; color: #334155;
+    }
+    .opsi-metode:hover { border-color: #CBD5E1; }
+    .opsi-metode:has(input:checked) { border-color: #0085FF; }
+    .opsi-metode input {
+        position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;
+    }
+</style>
+
 <div id="modalBayar" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 p-6">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-            <h3 class="text-base font-bold text-slate-800">Konfirmasi Pembayaran</h3>
-            <button type="button" onclick="tutupModalBayar()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+    <div style="background:#FFFFFF; border-radius:28px; width:100%; max-width:520px; padding:28px; box-shadow:0 20px 50px rgba(15,23,42,.25);">
+
+        <!-- Judul + tombol tutup -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+            <h3 style="font-size:20px; font-weight:700; color:#1E293B; margin:0;">Konfirmasi Pembayaran</h3>
+            <button type="button" onclick="tutupModalBayar()" aria-label="Tutup"
+                    style="color:#94A3B8; background:none; border:0; cursor:pointer; padding:4px; display:flex;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
-        <form action="<?php echo $base; ?>transaksi/bayar" method="post" class="space-y-4">
+
+        <form action="<?php echo $base; ?>transaksi/bayar" method="post">
             <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
             <input type="hidden" name="id_pesanan" id="modalIdPesanan" value="">
-            <div class="p-4 bg-slate-50 rounded-2xl space-y-1.5 text-xs">
-                <div class="flex justify-between"><span class="text-slate-500">Kode Pesanan:</span><span class="font-bold text-[#0085ff]" id="modalKodePesanan">-</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Pelanggan:</span><span class="font-semibold text-slate-800" id="modalNamaPelanggan">-</span></div>
-                <div class="flex justify-between pt-2 border-t border-slate-200"><span class="text-slate-600 font-medium">Total Tagihan:</span><span class="font-bold text-[#0085ff] text-sm" id="modalTotalHarga">Rp 0</span></div>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-2">Metode Pembayaran</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <?php foreach (['tunai' => 'Tunai', 'qris' => 'QRIS', 'transfer' => 'Transfer'] as $v => $l): ?>
-                        <label class="flex flex-col items-center justify-center p-3 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-[#0085ff] has-checked:border-[#0085ff] has-checked:bg-blue-50/50 transition-all text-xs">
-                            <input type="radio" name="metode" value="<?php echo $v; ?>" <?php echo $v === 'tunai' ? 'checked' : ''; ?> class="hidden">
-                            <span class="font-semibold text-slate-800"><?php echo $l; ?></span>
-                        </label>
-                    <?php endforeach; ?>
+
+            <!-- Ringkasan -->
+            <div style="background:#F0F6FE; border-radius:18px; padding:20px 22px; margin-bottom:24px; display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px;">
+                    <span style="color:#64748B;">Kode Pesanan</span>
+                    <span id="modalKodePesanan" style="font-weight:700; color:#0A7DE0;">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px;">
+                    <span style="color:#64748B;">Pelanggan</span>
+                    <span id="modalNamaPelanggan" style="color:#0F172A;">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px;">
+                    <span style="color:#64748B;">Total Tagihan</span>
+                    <span id="modalTotalHarga" style="font-weight:700; font-size:20px; color:#0A7DE0;">Rp 0</span>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2.5 pt-3">
-                <button type="button" onclick="tutupModalBayar()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-semibold text-white bg-[#0085ff] hover:bg-[#0070d8] rounded-xl shadow-xs transition-colors">Konfirmasi Lunas</button>
+
+            <!-- Metode pembayaran -->
+            <p style="font-size:15px; font-weight:700; color:#334155; margin:0 0 12px;">Metode Pembayaran</p>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:28px;">
+                <?php foreach (['tunai' => 'Tunai', 'qris' => 'QRIS', 'transfer' => 'Transfer'] as $v => $l): ?>
+                    <label class="opsi-metode">
+                        <input type="radio" name="metode" value="<?php echo $v; ?>" required>
+                        <span><?php echo $l; ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Aksi -->
+            <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px;">
+                <button type="button" onclick="tutupModalBayar()"
+                        style="padding:12px 20px; font-size:15px; color:#475569; background:none; border:0; cursor:pointer; border-radius:14px;">Batal</button>
+                <button type="submit"
+                        style="padding:14px 28px; font-size:15px; font-weight:500; color:#FFFFFF; background:#0085FF; border:0; cursor:pointer; border-radius:14px;">Konfirmasi Lunas</button>
             </div>
         </form>
     </div>
@@ -275,6 +311,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
         document.getElementById('modalKodePesanan').textContent = kode;
         document.getElementById('modalNamaPelanggan').textContent = nama;
         document.getElementById('modalTotalHarga').textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
+        document.querySelectorAll('#modalBayar input[name="metode"]').forEach(r => r.checked = false);
         const m = document.getElementById('modalBayar');
         m.classList.remove('hidden');
         m.classList.add('flex');
