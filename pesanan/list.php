@@ -66,7 +66,10 @@ unset($_SESSION['flash_sukses'], $_SESSION['flash_error']);
 $qs = fn(int $page) => $base . $listPath . '?page=' . $page
     . '&cari=' . urlencode($cari) . '&status=' . urlencode($filterStatus) . '&bayar=' . urlencode($filterBayar);
 
-$btnAksi = 'px-4 py-1.5 text-xs text-slate-600 font-normal bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors';
+$btnAksi = 'inline-flex items-center justify-center px-3 py-1.5 text-xs font-normal rounded-lg transition-colors';
+$btnStatusStyle = 'color: #A21CAF; background-color: #FDF4FF; border: 1px solid #F0ABFC;';
+$btnBayarStyle  = 'color: #DC2626; background-color: #FEF2F2; border: 1px solid #FCA5A5;';
+$btnNotaStyle   = 'color: #0A5CC7; background-color: #FFFFFF; border: 1px solid #60A5FA;';
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -144,7 +147,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                     <th scope="col" class="py-4 px-6 font-medium">Kode</th>
                     <th scope="col" class="py-4 px-6 font-medium">Nama Pelanggan</th>
                     <th scope="col" class="py-4 px-6 font-medium text-center">Progres Cucian</th>
-                    <th scope="col" class="py-4 pl-10 pr-8 font-medium text-right whitespace-nowrap">Status Pembayaran</th>
+                    <th scope="col" class="py-4 px-6 font-medium text-center whitespace-nowrap">Status Pembayaran</th>
                     <th scope="col" class="py-4 px-6 font-medium text-center">Update</th>
                 </tr>
             </thead>
@@ -181,21 +184,21 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                             <td class="py-4 px-6 whitespace-nowrap text-center">
                                 <span class="inline-block px-5 py-1 rounded-full text-xs font-medium <?php echo $badgeProgres[1]; ?>"><?php echo $badgeProgres[0]; ?></span>
                             </td>
-                            <td class="py-4 pl-10 pr-8 whitespace-nowrap text-right">
+                            <td class="py-4 px-6 whitespace-nowrap text-center">
                                 <span class="inline-block px-5 py-1 rounded-full text-xs font-medium <?php echo $badgeBayar[1]; ?>"><?php echo $badgeBayar[0]; ?></span>
                             </td>
                             <td class="py-4 px-6 whitespace-nowrap text-center">
                                 <div class="inline-flex items-center justify-center gap-2">
                                     <?php if ($isLunas && $st === 'diambil'): ?>
-                                        <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>">Lihat Nota</a>
+                                        <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>" style="<?php echo $btnNotaStyle; ?>">Lihat Nota</a>
                                     <?php else: ?>
-                                        <a href="<?php echo $base . $detailPath; ?>?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>">Status</a>
+                                        <a href="<?php echo $base . $detailPath; ?>?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>" style="<?php echo $btnStatusStyle; ?>">Status</a>
                                         <?php if ($isLunas): ?>
-                                            <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>">Lihat Nota</a>
+                                            <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>" style="<?php echo $btnNotaStyle; ?>">Lihat Nota</a>
                                         <?php else: ?>
                                             <button type="button"
                                                     onclick="bukaModalBayar(<?php echo (int) $row['id_pesanan']; ?>, '<?php echo e($row['kode_pesanan']); ?>', '<?php echo e($row['nama_pelanggan']); ?>', <?php echo (float) $row['total_harga']; ?>)"
-                                                    class="<?php echo $btnAksi; ?>">Bayar</button>
+                                                    class="<?php echo $btnAksi; ?>" style="<?php echo $btnBayarStyle; ?>">Bayar</button>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
