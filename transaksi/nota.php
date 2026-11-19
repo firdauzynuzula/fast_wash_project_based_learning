@@ -9,46 +9,91 @@ if ($id <= 0) {
     exit;
 }
 
-// Ambil data header nota dari view v_nota_header
-$stmtHeader = $pdo->prepare("SELECT * FROM v_nota_header WHERE id_pesanan = :id");
-$stmtHeader->execute(['id' => $id]);
-$nota = $stmtHeader->fetch();
+// Data pesanan + pelanggan + kasir
+$stmt = $pdo->prepare(
+    "SELECT p.*,
+            pl.nama AS nama_pelanggan,
+            pl.no_telepon AS no_pelanggan,
+            k.nama AS nama_karyawan
+       FROM pesanan p
+       JOIN pelanggan pl ON pl.id_pelanggan = p.id_pelanggan
+       LEFT JOIN karyawan k ON k.id_karyawan = p.id_karyawan
+      WHERE p.id_pesanan = :id"
+);
+$stmt->execute(['id' => $id]);
+$pesanan = $stmt->fetch();
 
-if (!$nota) {
+if (!$pesanan) {
     header('Location: ' . $base . 'pesanan');
     exit;
 }
 
-// Ambil item rincian nota
-$stmtItems = $pdo->prepare("
-    SELECT d.*, l.nama_layanan, l.satuan
-      FROM detail_pesanan d
-      JOIN layanan l ON l.id_layanan = d.id_layanan
-     WHERE d.id_pesanan = :id
-");
-$stmtItems->execute(['id' => $id]);
-$items = $stmtItems->fetchAll();
-
-$isLunas = ($nota['status_bayar'] === 'lunas');
-$metodeBayar = strtoupper($nota['metode_pembayaran'] ?: 'Tunai');
-
-// Teks template pesan WhatsApp
-$waMsg = rawurlencode(
-    "🧾 *NOTA TRANSAKSI FAST WASH LAUNDRY*\n\n" .
-    "No. Nota: *{$nota['kode_pesanan']}*\n" .
-    "Pelanggan: {$nota['nama_pelanggan']}\n" .
-    "Tanggal Masuk: " . date('d M Y, H:i', strtotime($nota['tanggal_masuk'])) . "\n" .
-    "Estimasi Selesai: " . ($nota['estimasi_selesai'] ? date('d M Y', strtotime($nota['estimasi_selesai'])) : '-') . "\n\n" .
-    "Total Pembayaran: *Rp " . number_format((float) $nota['total_harga'], 0, ',', '.') . "*\n" .
-    "Status: *" . ($isLunas ? 'LUNAS / PAID' : 'BELUM LUNAS') . "* (" . $metodeBayar . ")\n\n" .
-    "Pengambilan barang wajib menunjukkan pesan/nota ini. Terima kasih telah mempercayakan pakaian Anda di Fast Wash Laundry!"
+// Rincian layanan
+$stmtDetail = $pdo->prepare(
+    "SELECT d.qty, d.harga_satuan, d.catatan, l.nama_layanan, l.satuan
+       FROM detail_pesanan d
+       JOIN layanan l ON l.id_layanan = d.id_layanan
+      WHERE d.id_pesanan = :id
+      ORDER BY d.id_pesanan ASC"
 );
-$waCleanPhone = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', (string)$nota['no_whatsapp_pelanggan']));
-$waUrl = "https://wa.me/{$waCleanPhone}?text={$waMsg}";
+$stmtDetail->execute(['id' => $id]);
+$daftarDetail = $stmtDetail->fetchAll();
+
+// Transaksi pembayaran valid terakhir
+$stmtTrx = $pdo->prepare(
+    "SELECT * FROM riwayat_transaksi
+      WHERE id_pesanan = :id AND status_transaksi = 'valid'
+      ORDER BY tanggal_bayar DESC LIMIT 1"
+);
+$stmtTrx->execute(['id' => $id]);
+$trx = $stmtTrx->fetch();
+
+$isLunas = ($pesanan['status_bayar'] === 'lunas');
+
+// ---------- Helper format ----------
+$bulanPanjang = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+$bulanPendek  = [1 => 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+$tglPanjang = fn(string $d) => date('j', strtotime($d)) . ' ' . $bulanPanjang[(int) date('n', strtotime($d))] . ' ' . date('Y', strtotime($d));
+$tglPendek  = fn(string $d) => date('d', strtotime($d)) . ' ' . $bulanPendek[(int) date('n', strtotime($d))] . ' ' . date('Y', strtotime($d));
+$tglJam     = fn(string $d) => $tglPanjang($d) . ', ' . date('H:i', strtotime($d)) . ' WIB';
+$rp         = fn($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
+
+$kode          = $pesanan['kode_pesanan'];
+$waktuPesan    = $tglJam($pesanan['tanggal_pesan']);
+$tanggalMasuk  = $tglPendek($pesanan['tanggal_pesan']);
+$estimasi      = $pesanan['estimasi_selesai'] ? $tglPendek($pesanan['estimasi_selesai']) : '-';
+$kasir         = $pesanan['nama_karyawan'] ?: '-';
+
+$subtotalLayanan = (float) $pesanan['subtotal_layanan'];
+$diskon          = (float) ($pesanan['diskon'] ?? 0);
+$biayaTambahan   = (float) $pesanan['biaya_tambahan'];
+$totalHarga      = (float) $pesanan['total_harga'];
+
+// Metode & referensi pembayaran
+$metodeKey = $trx ? strtolower($trx['jenis_pembayaran']) : '';
+$metodeLabel = ['tunai' => 'TUNAI', 'qris' => 'QRIS', 'transfer' => 'TRANSFER'][$metodeKey] ?? strtoupper($metodeKey);
+$waktuBayar = $trx && !empty($trx['tanggal_bayar']) ? $tglJam($trx['tanggal_bayar']) : $waktuPesan;
+
+$noRef = $trx['no_referensi'] ?? $trx['kode_referensi'] ?? $trx['kode_transaksi'] ?? null;
+if (!$noRef) {
+    $prefix = ['tunai' => 'CS', 'qris' => 'QR', 'transfer' => 'TF'][$metodeKey] ?? 'TX';
+    $noRef = $prefix . '-' . preg_replace('/\D/', '', $kode) . '-FW';
+}
+
+// Link WhatsApp ke pelanggan
+$noWa = preg_replace('/\D/', '', (string) $pesanan['no_pelanggan']);
+if (str_starts_with($noWa, '0')) {
+    $noWa = '62' . substr($noWa, 1);
+}
+$pesanWa = "Halo {$pesanan['nama_pelanggan']}, berikut nota pesanan laundry Anda di Fast Wash.\n"
+         . "Kode: {$kode}\nTotal: " . $rp($totalHarga) . "\nStatus: " . ($isLunas ? 'LUNAS' : 'BELUM LUNAS')
+         . "\nEstimasi selesai: {$estimasi}\nTerima kasih telah mempercayakan laundry Anda kepada Fast Wash!";
+$linkWa = 'https://wa.me/' . $noWa . '?text=' . rawurlencode($pesanWa);
 
 $breadcrumb = [
     ['label' => 'Pesanan', 'url' => 'pesanan'],
-    ['label' => 'Rincian Pesanan', 'url' => 'pesanan/detail?id=' . $nota['id_pesanan']],
+    ['label' => 'Rincian Pesanan', 'url' => 'pesanan/detail?id=' . $id],
     ['label' => 'Nota Pesanan', 'url' => ''],
 ];
 
@@ -56,255 +101,213 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-@media print {
-    header, aside, #btn-open-sidebar, .no-print, nav {
-        display: none !important;
+    .nota-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .nota-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 20px; border-radius: 12px; font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; box-sizing: border-box; font-family: inherit; }
+    .nota-btn-wa { background: #fff; border: 1px solid #6ee7b7; color: #10b981; }
+    .nota-btn-print { background: #0085ff; border: 1px solid #0085ff; color: #fff; box-shadow: 0 4px 10px rgba(0,133,255,.25); }
+
+    .nota-card { background: #fff; border-radius: 28px; border: 1px solid #eef2f7; padding: 36px 38px; box-shadow: 0 1px 3px rgba(15,23,42,.04); margin-bottom: 40px; box-sizing: border-box; }
+    .nota-dash { border: 0; border-top: 1px dashed #d1d5db; margin: 28px 0; }
+
+    .nota-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .nota-brand { display: flex; align-items: center; gap: 12px; }
+    .nota-logo { width: 40px; height: 40px; border-radius: 50%; background: #0085ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nota-brand-name { font-size: 20px; font-weight: 700; color: #0070d8; }
+    .nota-addr { font-size: 11px; color: #6b7280; margin: 18px 0 0; line-height: 1.4; }
+    .nota-addr + .nota-addr { margin-top: 6px; }
+    .nota-addr b { font-weight: 500; color: #111827; }
+    .nota-right { text-align: right; }
+    .nota-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .nota-badge i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .nota-badge-ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; }
+    .nota-badge-ok i { background: #10b981; }
+    .nota-badge-no { background: #fffbeb; border: 1px solid #fcd34d; color: #d97706; }
+    .nota-badge-no i { background: #f59e0b; }
+    .nota-kode { font-size: 28px; font-weight: 800; color: #0f172a; margin-top: 8px; letter-spacing: -0.5px; line-height: 1.2; }
+    .nota-tgl { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+    .nota-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center; }
+    .nota-info .lbl { font-size: 12px; color: #6b7280; }
+    .nota-info .val { font-size: 13px; font-weight: 700; color: #111827; margin-top: 8px; }
+    .nota-info .val.biru { color: #0085ff; }
+
+    .nota-scroll { overflow-x: auto; }
+    .nota-tbl { min-width: 560px; }
+    .nota-row { display: grid; grid-template-columns: 1fr 150px 150px 130px; align-items: center; }
+    .nota-row > div:not(:first-child) { text-align: center; }
+    .nota-thead { font-size: 13px; color: #4b5563; padding: 16px 0; border-bottom: 1px solid #f1f5f9; border-top: 1px dashed #d1d5db; }
+    .nota-trow { padding: 20px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .nota-svc { display: flex; align-items: center; gap: 12px; }
+    .nota-svc-ico { width: 36px; height: 36px; border-radius: 10px; background: #eef4fb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nota-svc-nama { font-weight: 700; color: #1f2937; font-size: 13px; }
+    .nota-svc-ket { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .nota-b { font-weight: 700; color: #1f2937; }
+    .nota-m { color: #4b5563; }
+
+    .nota-pay { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 24px; align-items: start; }
+    .nota-box { background: #f3f8fe; border: 1px solid #dbeafe; border-radius: 16px; padding: 18px 20px; }
+    .nota-box-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .nota-box-lbl { font-size: 11px; font-weight: 700; color: #1e3a8a; letter-spacing: .5px; }
+    .nota-box-ver { font-size: 10px; font-weight: 600; color: #2563eb; background: #dbe8fb; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+    .nota-box-ref { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+    .nota-box-met { font-size: 10px; font-weight: 700; color: #334155; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; }
+    .nota-box-txt { font-size: 14px; font-weight: 700; color: #1f2937; }
+    .nota-box-time { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+    .nota-box-foot { display: flex; align-items: center; gap: 8px; border-top: 1px solid #dbeafe; margin-top: 12px; padding-top: 12px; font-size: 11px; color: #6b7280; }
+
+    .nota-tot-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 12px; }
+    .nota-tot-row span:first-child { color: #4b5563; }
+    .nota-tot-row span:last-child { font-weight: 600; color: #1f2937; }
+    .nota-tot-line { border: 0; border-top: 1px dashed #1f2937; margin: 4px 0 12px; }
+    .nota-total { display: flex; justify-content: space-between; align-items: center; }
+    .nota-total .a { font-size: 13px; font-weight: 700; color: #0085ff; }
+    .nota-total .b { font-size: 24px; font-weight: 800; color: #0085ff; }
+
+    .nota-foot { margin-top: 24px; padding-top: 20px; border-top: 1px dashed #d1d5db; }
+    .nota-foot p { margin: 0; }
+    .nota-catatan { font-size: 11px; color: #4b5563; }
+    .nota-catatan b, .nota-sk b { color: #1f2937; font-weight: 700; }
+    .nota-sk { font-size: 11px; margin-top: 8px !important; }
+    .nota-sk-txt { font-size: 10.5px; color: #9ca3af; line-height: 1.6; margin-top: 4px !important; padding-left: 14px; }
+    .nota-thanks { font-size: 11px; font-weight: 500; color: #0085ff; margin-top: 12px !important; }
+
+    @media (max-width: 820px) {
+        .nota-pay { grid-template-columns: 1fr; gap: 24px; }
+        .nota-info { grid-template-columns: repeat(2, 1fr); }
+        .nota-card { padding: 24px 20px; }
+        .nota-right { text-align: left; }
     }
-    body, .h-screen, div {
-        overflow: visible !important;
-        height: auto !important;
-        background: white !important;
+    @media print {
+        .nota-actions, aside, nav { display: none !important; }
+        body { background: #fff !important; }
+        .nota-card { box-shadow: none !important; border: none !important; margin: 0; }
     }
-    main {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-    }
-    #notaCardPrint {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 auto !important;
-        max-width: 700px !important;
-    }
-}
 </style>
 
-<!-- Action Bar Atas Sesuai Desain Figma (Kirim WhatsApp & Cetak Nota) -->
-<div class="no-print flex items-center justify-between gap-3 mb-6">
-    <div class="flex items-center gap-2">
-        <a href="<?php echo $base; ?>pesanan/detail?id=<?php echo (int) $nota['id_pesanan']; ?>"
-           class="text-xs text-slate-500 hover:text-[#0085ff] flex items-center gap-1 font-medium">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            <span>Kembali ke Rincian Pesanan</span>
-        </a>
-    </div>
-
-    <div class="flex items-center gap-3">
-        <!-- Tombol Kirim WhatsApp (Border Hijau, Latar Putih) -->
-        <a href="<?php echo $waUrl; ?>"
-           target="_blank"
-           class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-400 text-emerald-500 hover:bg-emerald-50 font-medium text-xs rounded-2xl transition-colors shadow-xs">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2.05 21.95l4.908-1.288A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
-            </svg>
-            <span>Kirim WhatsApp</span>
-        </a>
-
-        <!-- Tombol Cetak Nota Fisik / Thermal (Biru Solid #0085ff) -->
-        <button type="button"
-                onclick="window.print()"
-                class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0085ff] hover:bg-[#0070d8] text-white font-semibold text-xs rounded-2xl shadow-sm shadow-[#0085ff]/20 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-            </svg>
-            <span>Cetak Nota Fisik / Thermal</span>
-        </button>
-    </div>
+<!-- Tombol aksi -->
+<div class="nota-actions">
+    <a href="<?php echo e($linkWa); ?>" target="_blank" rel="noopener" class="nota-btn nota-btn-wa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        <span>Kirim WhatsApp</span>
+    </a>
+    <button type="button" onclick="window.print()" class="nota-btn nota-btn-print">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>Cetak Nota Fisik / Thermal</span>
+    </button>
 </div>
 
-<!-- Kartu Nota Sesuai Rancangan UI/UX Designer Figma (100% Identik) -->
-<div class="max-w-4xl mx-auto mb-12">
-    <div id="notaCardPrint" class="bg-white rounded-3xl p-8 sm:p-10 shadow-xs border border-slate-100">
+<!-- Nota -->
+<div id="areaNota" class="nota-card">
 
-        <!-- Baris Header Nota: Logo & Kontak di Kiri, Status & Kode di Kanan -->
-        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100">
-            <!-- Kiri: Brand & Alamat -->
-            <div>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-[#0085ff] text-white flex items-center justify-center font-bold text-lg shadow-xs">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <rect x="4" y="2" width="16" height="20" rx="2"/>
-                            <circle cx="12" cy="13" r="4"/>
-                            <line x1="8" y1="6" x2="8.01" y2="6"/>
-                            <line x1="12" y1="6" x2="12.01" y2="6"/>
-                        </svg>
+    <div class="nota-head">
+        <div>
+            <div class="nota-brand">
+                <div class="nota-logo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="3"/><circle cx="12" cy="14" r="4"/><path d="M8.5 6.5h.01M11.5 6.5h.01"/></svg>
+                </div>
+                <span class="nota-brand-name">Fast Wash</span>
+            </div>
+            <p class="nota-addr">Jl. Melati No. 12, Kota Malang</p>
+            <p class="nota-addr">WhatsApp Customer Care: <b>0812-3456-7890</b></p>
+        </div>
+
+        <div class="nota-right">
+            <?php if ($isLunas): ?>
+                <span class="nota-badge nota-badge-ok"><i></i>LUNAS / PAID</span>
+            <?php else: ?>
+                <span class="nota-badge nota-badge-no"><i></i>BELUM LUNAS / UNPAID</span>
+            <?php endif; ?>
+            <div class="nota-kode"><?php echo e($kode); ?></div>
+            <div class="nota-tgl"><?php echo e($waktuPesan); ?></div>
+        </div>
+    </div>
+
+    <hr class="nota-dash">
+
+    <div class="nota-info">
+        <div><div class="lbl">Nama Pelanggan</div><div class="val"><?php echo e($pesanan['nama_pelanggan']); ?></div></div>
+        <div><div class="lbl">Tanggal Masuk</div><div class="val"><?php echo e($tanggalMasuk); ?></div></div>
+        <div><div class="lbl">Estimasi Selesai</div><div class="val biru"><?php echo e($estimasi); ?></div></div>
+        <div><div class="lbl">Kasir / Petugas</div><div class="val"><?php echo e($kasir); ?></div></div>
+    </div>
+
+    <hr class="nota-dash" style="margin-bottom: 0;">
+
+    <div class="nota-scroll">
+        <div class="nota-tbl">
+            <div class="nota-row nota-thead" style="border-top: 0;">
+                <div>Layanan &amp; Deskripsi</div>
+                <div>Jumlah / Berat</div>
+                <div>Tarif Satuan</div>
+                <div>Subtotal</div>
+            </div>
+
+            <?php foreach ($daftarDetail as $d): ?>
+                <?php
+                $qty      = (float) $d['qty'];
+                $harga    = (float) $d['harga_satuan'];
+                $satuan   = $d['satuan'] ?: 'kg';
+                $subtotal = $qty * $harga;
+                $ket      = trim((string) ($d['catatan'] ?? '')) ?: 'Pewangi: Ocean Fresh • Kemasan Plastik Rapi';
+                ?>
+                <div class="nota-row nota-trow">
+                    <div class="nota-svc">
+                        <div class="nota-svc-ico">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0085ff" stroke-width="2"><rect x="3" y="8" width="18" height="8" rx="2"/></svg>
+                        </div>
+                        <div>
+                            <div class="nota-svc-nama"><?php echo e($d['nama_layanan']); ?></div>
+                            <div class="nota-svc-ket"><?php echo e($ket); ?></div>
+                        </div>
                     </div>
-                    <span class="text-xl font-bold text-slate-800">Fast Wash</span>
+                    <div class="nota-b"><?php echo number_format($qty, 1, '.', ''); ?> <?php echo e($satuan); ?></div>
+                    <div class="nota-m"><?php echo $rp($harga); ?> / <?php echo e($satuan); ?></div>
+                    <div class="nota-b"><?php echo $rp($subtotal); ?></div>
                 </div>
-                <p class="text-xs text-slate-400 mt-2">Jl. Melati No. 12, Kota Malang</p>
-                <p class="text-xs text-slate-400">WhatsApp Customer Care: 0812-3456-7890</p>
-            </div>
-
-            <!-- Kanan: Status Bayar, No Nota & Waktu -->
-            <div class="text-left sm:text-right space-y-1.5">
-                <div>
-                    <?php if ($isLunas): ?>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>LUNAS / PAID</span>
-                        </span>
-                    <?php else: ?>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
-                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                            <span>BELUM LUNAS</span>
-                        </span>
-                    <?php endif; ?>
-                </div>
-                <div class="text-2xl font-extrabold text-slate-800 tracking-tight">
-                    <?php echo e($nota['kode_pesanan']); ?>
-
-                </div>
-                <p class="text-xs text-slate-400">
-                    <?php echo date('d F Y, H:i', strtotime($nota['tanggal_masuk'])); ?> WIB
-                </p>
-            </div>
+            <?php endforeach; ?>
         </div>
+    </div>
 
-        <!-- Baris 4 Metadata Utama: Nama, Tgl Masuk, Estimasi, Kasir -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-b border-slate-100 text-xs">
-            <div>
-                <span class="text-slate-400">Nama Pelanggan</span>
-                <div class="font-bold text-slate-800 text-sm mt-0.5"><?php echo e($nota['nama_pelanggan']); ?></div>
+    <div class="nota-pay">
+        <div class="nota-box">
+            <div class="nota-box-top">
+                <span class="nota-box-lbl">METODE PEMBAYARAN</span>
+                <?php if ($isLunas): ?><span class="nota-box-ver">Otomatis Terverifikasi</span><?php endif; ?>
             </div>
-            <div>
-                <span class="text-slate-400">Tanggal Masuk</span>
-                <div class="font-bold text-slate-800 text-sm mt-0.5"><?php echo date('d M Y', strtotime($nota['tanggal_masuk'])); ?></div>
-            </div>
-            <div>
-                <span class="text-slate-400">Estimasi Selesai</span>
-                <div class="font-bold text-[#0085ff] text-sm mt-0.5">
-                    <?php echo $nota['estimasi_selesai'] ? date('d M Y', strtotime($nota['estimasi_selesai'])) : '-'; ?>
 
+            <?php if ($isLunas): ?>
+                <div class="nota-box-ref">
+                    <?php if ($metodeLabel !== ''): ?><span class="nota-box-met"><?php echo e($metodeLabel); ?></span><?php endif; ?>
+                    <span class="nota-box-txt">Lunas - No. Ref: <?php echo e($noRef); ?></span>
                 </div>
-            </div>
-            <div>
-                <span class="text-slate-400">Kasir / Petugas</span>
-                <div class="font-bold text-slate-800 text-sm mt-0.5"><?php echo e($nota['kasir'] ?: 'Petugas'); ?></div>
-            </div>
-        </div>
-
-        <!-- Tabel Item Layanan -->
-        <div class="py-6 border-b border-slate-100">
-            <table class="w-full text-left text-xs text-slate-600">
-                <thead>
-                    <tr class="text-slate-400 font-semibold border-b border-slate-100 pb-2">
-                        <th class="pb-3 font-semibold">Layanan & Deksripsi</th>
-                        <th class="pb-3 text-center font-semibold">Jumlah / Berat</th>
-                        <th class="pb-3 text-right font-semibold">Tarif Satuan</th>
-                        <th class="pb-3 text-right font-semibold">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    <?php foreach ($items as $it): ?>
-                        <tr>
-                            <td class="py-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#0085ff] flex items-center justify-center shrink-0 mt-0.5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <rect x="2" y="6" width="20" height="12" rx="2"/>
-                                            <circle cx="12" cy="12" r="2"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="font-bold text-slate-800 text-sm"><?php echo e($it['nama_layanan']); ?></div>
-                                        <div class="text-[11px] text-slate-400 mt-0.5">Pewangi: Ocean Fresh • Kemasan Plastik Rapi</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 text-center font-semibold text-slate-700 text-sm">
-                                <?php echo (float) $it['qty']; ?> <?php echo e($it['satuan']); ?>
-
-                            </td>
-                            <td class="py-4 text-right text-slate-600 text-sm">
-                                Rp <?php echo number_format((float) $it['harga_satuan'], 0, ',', '.'); ?> / <?php echo e($it['satuan']); ?>
-
-                            </td>
-                            <td class="py-4 text-right font-bold text-slate-800 text-sm">
-                                Rp <?php echo number_format((float) $it['subtotal'], 0, ',', '.'); ?>
-
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Baris Bawah: Box Metode Pembayaran di Kiri & Rincian Total di Kanan -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 border-b border-slate-100">
-            <!-- Box Metode Pembayaran Kiri -->
-            <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 text-xs space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px]">METODE PEMBAYARAN</span>
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 text-[#0085ff]">Otomatis Terverifikasi</span>
-                </div>
-                <div class="flex items-center gap-2 pt-1">
-                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase bg-white border border-slate-200 text-slate-800">
-                        <?php echo e($metodeBayar); ?>
-
-                    </span>
-                    <span class="font-bold text-slate-800">
-                        <?php echo $isLunas ? 'Lunas - No. Ref: QR-' . substr(md5((string)$nota['id_pesanan']), 0, 6) . '-FW' : 'Menunggu Pelunasan'; ?>
-
-                    </span>
-                </div>
-                <p class="text-slate-400 text-[11px]">
-                    Divalidasi pada <?php echo date('d F Y, H:i', strtotime($nota['tanggal_masuk'])); ?> WIB
-                </p>
-                <div class="flex items-center gap-1.5 text-[11px] text-[#0085ff] pt-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
+                <div class="nota-box-time">Divalidasi pada <?php echo e($waktuBayar); ?></div>
+                <div class="nota-box-foot">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="#2563eb" style="flex-shrink:0;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                     <span>Bukti pembayaran sah secara elektronik oleh Fast Wash System</span>
                 </div>
-            </div>
-
-            <!-- Rincian Biaya Kanan -->
-            <div class="space-y-2.5 text-xs text-slate-600 sm:pl-8">
-                <div class="flex justify-between">
-                    <span>Subtotal Layanan</span>
-                    <span class="font-semibold text-slate-800">Rp <?php echo number_format((float) $nota['subtotal_layanan'], 0, ',', '.'); ?></span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Diskon Promosi</span>
-                    <span class="font-semibold text-slate-800">Rp 0</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Biaya Tambahan / Antar</span>
-                    <span class="font-semibold text-slate-800">Rp <?php echo number_format((float) $nota['biaya_tambahan'], 0, ',', '.'); ?></span>
-                </div>
-                <!-- Garis Putus-putus -->
-                <div class="border-b border-dashed border-slate-300 my-2"></div>
-                <div class="flex items-center justify-between pt-1">
-                    <span class="font-bold text-slate-800 text-sm">Total Pembayaran</span>
-                    <span class="text-2xl font-extrabold text-[#0085ff]">
-                        Rp <?php echo number_format((float) $nota['total_harga'], 0, ',', '.'); ?>
-
-                    </span>
-                </div>
-            </div>
+            <?php else: ?>
+                <div class="nota-box-ref"><span class="nota-box-txt" style="color:#d97706;">Belum Lunas - Menunggu Pembayaran</span></div>
+                <div class="nota-box-time">Silakan lakukan pembayaran saat pengambilan cucian.</div>
+            <?php endif; ?>
         </div>
 
-        <!-- Footer Nota: Catatan, Syarat Ketentuan & Ucapan Terima Kasih -->
-        <div class="pt-6 text-xs text-slate-500 space-y-2">
-            <p>
-                <strong class="text-slate-700">Catatan Pesanan:</strong>
-                <?php echo e($nota['catatan'] ?: 'Pakaian katun & kemeja kerja, mohon pisahkan kerah khusus.'); ?>
-
-            </p>
-            <div>
-                <strong class="text-slate-700">Syarat & Ketentuan:</strong>
-                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                    Pengambilan barang wajib menunjukkan nota digital ini atau struk fisik. Klaim kehilangan atau kerusakan maksimal 1×24 jam sejak pesanan diterima. Barang yang tidak diambil dalam tempo 30 hari di luar tanggung jawab kami.
-                </p>
+        <div>
+            <div class="nota-tot-row"><span>Subtotal Layanan</span><span><?php echo $rp($subtotalLayanan); ?></span></div>
+            <div class="nota-tot-row"><span>Diskon Promo</span><span><?php echo $rp($diskon); ?></span></div>
+            <div class="nota-tot-row"><span>Biaya Tambahan / Antar</span><span><?php echo $rp($biayaTambahan); ?></span></div>
+            <hr class="nota-tot-line">
+            <div class="nota-total">
+                <span class="a">Total Pembayaran</span>
+                <span class="b"><?php echo $rp($totalHarga); ?></span>
             </div>
-            <p class="text-xs font-semibold text-[#0085ff] pt-2">
-                Terima kasih telah mempercayakan laundry Anda kepada Fast Wash!
-            </p>
         </div>
+    </div>
 
+    <div class="nota-foot">
+        <p class="nota-catatan"><b>Catatan Pesanan:</b> <?php echo e(trim((string) $pesanan['catatan']) ?: '-'); ?></p>
+        <p class="nota-sk"><b>Syarat &amp; Ketentuan:</b></p>
+        <p class="nota-sk-txt">Pengambilan barang wajib menunjukkan nota digital ini atau struk fisik. Klaim kehilangan atau kerusakan maksimal 1×24 jam sejak pesanan diterima. barang yang tidak diambil dalam tempo 30 hari di luar tanggung jawab kami.</p>
+        <p class="nota-thanks">Terima kasih telah mempercayakan laundry Anda kepada Fast Wash!</p>
     </div>
 </div>
 
