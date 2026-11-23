@@ -39,6 +39,12 @@ if (!is_array($orders) || count($orders) === 0) {
 
 $statusBayar = (($_POST['status_bayar'] ?? '') === 'lunas') ? 'lunas' : 'belum_lunas';
 
+// Metode pembayaran dipilih di ringkasan pesanan (berlaku untuk semua pesanan)
+$metodeBayar = strtolower(trim($_POST['metode_pembayaran'] ?? 'tunai'));
+if (!in_array($metodeBayar, ['tunai', 'qris', 'transfer'], true)) {
+    $metodeBayar = 'tunai';
+}
+
 $stmtLay = $pdo->prepare("SELECT id_layanan, nama_layanan, harga, durasi_jam FROM layanan WHERE id_layanan = :id");
 $items = [];
 
@@ -56,10 +62,7 @@ foreach ($orders as $o) {
         kembaliError('Layanan yang dipilih tidak valid.');
     }
 
-    $metode = strtolower(trim($o['metode_pembayaran'] ?? 'tunai'));
-    if (!in_array($metode, ['tunai', 'qris', 'transfer'], true)) {
-        $metode = 'tunai';
-    }
+    $metode = $metodeBayar;
 
     $isExpress = !empty($o['layanan_cepat']);
     $harga     = (float) $lay['harga'];
@@ -120,11 +123,11 @@ try {
     ");
     $stmtCekKode = $pdo->prepare("SELECT 1 FROM pesanan WHERE kode_pesanan = :k");
 
-    // PERBAIKAN: tambah id_karyawan dan jumlah_bayar (NOT NULL)
-    // Jika nama kolom di tabelmu berbeda, samakan dengan transaksi/bayar.php
+    // CATATAN: sesuaikan kolom ini dengan tabel riwayat_transaksi kamu
+    // (mis. tambah jumlah_bayar / id_karyawan) -> samakan dengan transaksi/bayar.php
     $stmtTrx = $pdo->prepare("
-        INSERT INTO riwayat_transaksi (id_pesanan, id_karyawan, jumlah_bayar, jenis_pembayaran, status_transaksi, tanggal_bayar)
-        VALUES (:id_pesanan, :id_karyawan, :jumlah_bayar, :jenis, 'valid', NOW())
+        INSERT INTO riwayat_transaksi (id_pesanan, jumlah_bayar, jenis_pembayaran, status_transaksi, tanggal_bayar)
+        VALUES (:id_pesanan, :jumlah, :jenis, 'valid', NOW())
     ");
 
     $idsBaru = [];
@@ -171,10 +174,9 @@ try {
 
         if ($statusBayar === 'lunas') {
             $stmtTrx->execute([
-                'id_pesanan'   => $idPesanan,
-                'id_karyawan'  => $idKaryawan,
-                'jumlah_bayar' => $it['total'],
-                'jenis'        => $it['metode'],
+                'id_pesanan' => $idPesanan,
+                'jumlah'     => $it['total'],
+                'jenis'      => $it['metode'],
             ]);
         }
 

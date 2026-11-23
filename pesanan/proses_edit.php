@@ -26,7 +26,6 @@ if ($idPesanan <= 0) {
     exit;
 }
 
-<<<<<<< HEAD
 // Ambil status saat ini
 $stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar FROM pesanan WHERE id_pesanan = :id");
 $stmt->execute(['id' => $idPesanan]);
@@ -49,14 +48,16 @@ $urutanValid = [
     'dikeringkan' => 'selesai',
     'disetrika'   => 'selesai',
     'selesai'     => 'diambil',
-=======
-// Alur status: hanya boleh maju satu tahap
+];
+
 $nextMap = [
-    'diterima' => 'diproses',
-    'diproses' => 'selesai',
-    'selesai'  => 'diambil',
-    'diambil'  => null,
->>>>>>> 738207f5a561bc53f2efbf047ce20259c6fb5d77
+    'diterima'    => 'diproses',
+    'diproses'    => 'selesai',
+    'dicuci'      => 'selesai',
+    'dikeringkan' => 'selesai',
+    'disetrika'   => 'selesai',
+    'selesai'     => 'diambil',
+    'diambil'     => null,
 ];
 
 // Petugas yang mengubah status
