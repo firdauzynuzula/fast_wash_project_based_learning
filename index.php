@@ -65,6 +65,12 @@ $routes = [
     'log-activity/index'      => 'log-activity/index.php',
 
     'nota'                    => 'pelanggan/pesanan.php',
+
+    'pengaturan'              => 'pengaturan/index.php',
+    'pengaturan/index'        => 'pengaturan/index.php',
+    'pengaturan/proses_tambah' => 'pengaturan/proses.php',
+    'pengaturan/proses_edit'   => 'pengaturan/proses.php',
+    'pengaturan/hapus'         => 'pengaturan/proses.php',
 ];
 
 // Path URL relatif terhadap folder aplikasi (mendukung install di subfolder),
