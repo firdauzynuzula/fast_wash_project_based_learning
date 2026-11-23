@@ -13,8 +13,8 @@ function layananSemua(): array
     if (!isset($_SESSION['layanan'])) {
         $_SESSION['layanan'] = [
             ['id' => 1, 'nama' => 'Cuci + Setrika', 'deskripsi' => 'Pakaian dicuci dan disetrika rapi', 'harga' => 15000, 'aktif' => true],
-            ['id' => 2, 'nama' => 'Cuci Kering',    'deskripsi' => 'Pakaian dicuci dan disetrika rapi', 'harga' => 12000, 'aktif' => true],
-            ['id' => 3, 'nama' => 'Setrika',        'deskripsi' => 'Pakaian dicuci dan disetrika rapi', 'harga' => 8000,  'aktif' => true],
+            ['id' => 2, 'nama' => 'Cuci Kering',    'deskripsi' => 'Pakaian dicuci dan dikeringkan', 'harga' => 12000, 'aktif' => true],
+            ['id' => 3, 'nama' => 'Setrika',        'deskripsi' => 'Pakaian disetrika hingga rapi', 'harga' => 8000,  'aktif' => true],
         ];
         $_SESSION['layanan_next_id'] = 4;
     }

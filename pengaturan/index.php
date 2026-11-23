@@ -24,6 +24,29 @@ unset($_SESSION['flash_layanan']);
 
 $rupiah = fn(int $n): string => 'Rp ' . number_format($n, 0, ',', '.');
 
+/**
+ * Ikon layanan, ditentukan dari nama layanan. Semua ikon berukuran sama (28x28).
+ *  - mengandung "kering"                    -> mesin cuci
+ *  - mengandung "setrika" tanpa kata "cuci" -> setrika
+ *  - selain itu (mis. "Cuci + Setrika")     -> kaos
+ */
+function ikonLayanan(string $nama): string
+{
+    $n = mb_strtolower($nama);
+    $buka = '<svg width="28" height="28" fill="none" stroke="#0085FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">';
+
+    if (str_contains($n, 'kering')) {
+        // Mesin cuci
+        return $buka . '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="13" r="4.5"/><path d="M7 7h.01M10 7h.01"/></svg>';
+    }
+    if (str_contains($n, 'setrika') && !str_contains($n, 'cuci')) {
+        // Setrika
+        return $buka . '<path d="M3 18h17a1.5 1.5 0 0 0 1.5-1.5C21.5 12.5 18.5 10 14.5 10H11L8.5 6.5H5A2 2 0 0 0 3 8.5V18z"/><path d="M8 14h8"/></svg>';
+    }
+    // Kaos
+    return $buka . '<path d="M16 3l4 3-2 5-3-1v10H9V10L6 11 4 6l4-3c1 1.5 3 2 4 2s3-.5 4-2z"/></svg>';
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -138,9 +161,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <!-- Jenis layanan -->
                             <td class="pg-left">
                                 <div class="pg-svc">
-                                    <span class="pg-svc-ico">
-                                        <svg width="28" height="28" fill="none" stroke="#0085FF" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3l4 3-2 5-3-1v10H9V10L6 11 4 6l4-3c1 1.5 3 2 4 2s3-.5 4-2z"/></svg>
-                                    </span>
+                                    <span class="pg-svc-ico"><?php echo ikonLayanan($row['nama']); ?></span>
                                     <div>
                                         <div class="pg-svc-nama"><?php echo e($row['nama']); ?></div>
                                         <div class="pg-svc-desc"><?php echo e($row['deskripsi']); ?></div>
