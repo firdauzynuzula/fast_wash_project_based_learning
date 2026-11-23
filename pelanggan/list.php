@@ -131,6 +131,7 @@ $pelanggan = [
 .customer-figma .cf-stat-icon {
     width: 34px;
     height: 34px;
+    border-radius: 50%;
 }
 
 .customer-figma .cf-stat-value {
@@ -179,6 +180,79 @@ $pelanggan = [
     font-size: 12px;
 }
 
+.customer-figma table thead tr th:first-child {
+    border-top-left-radius:15px;
+}
+
+.customer-figma table thead tr th:last-child {
+    border-top-right-radius: 15px;
+}
+
+/* Icon panah dropdown ke bawah */
+.customer-figma .cf-control:has(select) {
+    position: relative;
+}
+
+.customer-figma .cf-control:has(select)::after {
+    content: "";
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    width: 7px;
+    height: 7px;    
+    border-right: 1.5px solid #64748b;
+    border-bottom: 1.5px solid #64748b;
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+}
+
+.customer-figma .cf-control select {
+    padding-right: 35px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.customer-figma table tbody td {
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+}
+
+.customer-figma table tbody td {
+    font-size: 13px !important;
+}
+
+/* Wrapper input dan ikon */
+.cf-input-icon {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Ukuran ikon jangan sampai membesar */
+.cf-input-icon svg {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+
+    display: block !important;
+    color: #64748b !important;
+    pointer-events: none !important;
+}
+
+/* Input tetap memenuhi kotak */
+.cf-input-icon input {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 40px !important;
+}
+
 </style>
 
 <div class="customer-figma">
@@ -192,15 +266,39 @@ $pelanggan = [
     </section>
 
     <section class="cf-stats" aria-label="Ringkasan pelanggan">
-        <article class="cf-stat"><div class="cf-stat-top"><span>Total Pelanggan</span><span class="cf-stat-icon">♧</span></div><div class="cf-stat-value">142</div><div class="cf-stat-note">Terdaftar di sistem</div></article>
-        <article class="cf-stat"><div class="cf-stat-top"><span>Pelanggan Aktif</span><span class="cf-stat-icon">◉</span></div><div class="cf-stat-value">98</div><div class="cf-stat-note">Pesanan dalam 30 hari</div></article>
-        <article class="cf-stat"><div class="cf-stat-top"><span>Pelanggan Baru</span><span class="cf-stat-icon">＋</span></div><div class="cf-stat-value">14</div><div class="cf-stat-note">Pada Bulan September</div></article>
-        <article class="cf-stat"><div class="cf-stat-top"><span>Rata-Rata Order</span><span class="cf-stat-icon">♧</span></div><div class="cf-stat-value">3.8x</div><div class="cf-stat-note">Setiap Akun</div></article>
+        <article class="cf-stat"><div class="cf-stat-top"><span>Total Pelanggan</span><svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1em" viewBox="0 0 640 512">
+	<path d="M0 0h640v512H0z" fill="none" />
+	<path fill="currentColor" d="M96 128a128 128 0 1 1 256 0a128 128 0 1 1-256 0M0 482.3C0 383.8 79.8 304 178.3 304h91.4c98.5 0 178.3 79.8 178.3 178.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3M609.3 512H471.5c5.4-9.4 8.6-20.3 8.6-32v-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2h61.4c89 0 161.2 72.2 161.2 161.3c0 17-13.8 30.7-30.7 30.7M432 256c-31 0-59-12.6-79.3-32.9c19.7-26.6 31.3-59.5 31.3-95.1c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112" />
+</svg>
+</div><div class="cf-stat-value">142</div><div class="cf-stat-note">Terdaftar di sistem</div></article>
+        <article class="cf-stat"><div class="cf-stat-top"><span>Pelanggan Aktif</span><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="currentColor" fill-rule="evenodd" d="M7.625 19.577q-3.746-2.163-4.357-5.624l-.707.795q-.1.112-.234.177t-.283.074t-.29-.04t-.252-.148q-.055-.05-.1-.108q-.045-.059-.077-.126q-.032-.066-.051-.138q-.018-.071-.023-.145q-.004-.074.006-.147t.034-.143t.062-.133q.037-.064.086-.119l1.741-1.959q.081-.986.369-2.058Q5.286 3.25 12 3.25q.074 0 .146.014q.073.015.141.043t.13.069t.113.094q.053.052.094.113t.069.13t.043.141t.014.146q0 .149-.057.287t-.163.243t-.243.163q-.138.057-.287.057q-5.563 0-7.003 5.374q-.214.8-.29 1.543l1.854 2.085q.049.055.086.119q.037.063.062.133q.024.07.034.143t.006.147t-.023.145t-.051.138t-.077.126t-.1.108q-.111.099-.252.148t-.29.04t-.283-.074t-.234-.177l-.566-.637q.669 2.532 3.502 4.168q.129.074.22.192t.129.263q.039.144.02.292q-.02.148-.095.277q-.036.064-.085.12t-.107.1t-.125.078q-.067.032-.138.051q-.071.02-.145.024q-.074.005-.147-.004t-.143-.034t-.134-.061m13.195-7.37q-.081.986-.369 2.058Q18.714 20.75 12 20.75q-.074 0-.146-.014q-.073-.015-.141-.043t-.13-.069t-.113-.094q-.053-.052-.094-.113t-.069-.13t-.043-.141T11.25 20q0-.149.057-.287t.163-.243t.243-.163q.138-.057.287-.057q5.563 0 7.003-5.374q.214-.8.29-1.543l-1.854-2.085q-.049-.055-.086-.119q-.037-.063-.062-.133q-.024-.07-.034-.143t-.006-.147q.005-.074.023-.145q.019-.072.051-.138t.077-.126q.045-.058.1-.108q.111-.099.252-.148t.29-.04t.283.074t.234.177l.566.637q-.669-2.532-3.502-4.168q-.129-.074-.22-.192t-.129-.263q-.039-.144-.02-.292q.02-.148.095-.277q.074-.129.192-.22t.263-.129t.292-.02q.148.02.277.095q3.746 2.163 4.357 5.624l.707-.795q.1-.112.234-.177t.283-.074t.29.04t.252.148q.055.05.1.108q.045.059.077.126q.032.066.051.138q.018.071.023.145q.004.074-.006.147t-.034.143q-.025.07-.062.133q-.037.064-.086.119zm-9.604 1.198L9.53 11.72q-.052-.053-.113-.094t-.13-.069t-.141-.043T9 11.5t-.146.014q-.073.015-.141.043t-.13.069t-.113.094q-.106.105-.163.243t-.057.287t.057.287t.163.243l2.25 2.25q.105.106.243.163t.287.057t.287-.057t.243-.163q.017-.016.032-.034l3.75-4.25q.049-.055.086-.119q.038-.064.061-.134q.024-.07.034-.143t.006-.147t-.024-.145t-.051-.138q-.033-.066-.078-.125q-.044-.059-.1-.107q-.055-.049-.119-.086q-.064-.038-.134-.061q-.07-.024-.143-.034t-.147-.006t-.145.024t-.138.051q-.066.033-.125.078q-.059.044-.107.1z" />
+</svg>
+</div><div class="cf-stat-value">98</div><div class="cf-stat-note">Pesanan dalam 30 hari</div></article>
+        <article class="cf-stat"><div class="cf-stat-top"><span>Pelanggan Baru</span><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="currentColor" d="M13 8c0-2.21-1.79-4-4-4S5 5.79 5 8s1.79 4 4 4s4-1.79 4-4m-2 0c0 1.1-.9 2-2 2s-2-.9-2-2s.9-2 2-2s2 .9 2 2M1 18v2h16v-2c0-2.66-5.33-4-8-4s-8 1.34-8 4m2 0c.2-.71 3.3-2 6-2c2.69 0 5.78 1.28 6 2zm17-3v-3h3v-2h-3V7h-2v3h-3v2h3v3z" />
+</svg>
+</div><div class="cf-stat-value">14</div><div class="cf-stat-note">Pada Bulan September</div></article>
+        <article class="cf-stat"><div class="cf-stat-top"><span>Rata-Rata Order</span><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path d="M3.977 9.84A2 2 0 0 1 5.971 8h12.058a2 2 0 0 1 1.994 1.84l.803 10A2 2 0 0 1 18.833 22H5.167a2 2 0 0 1-1.993-2.16z" />
+		<path d="M16 11V6a4 4 0 0 0-4-4v0a4 4 0 0 0-4 4v5" />
+	</g>
+</svg>
+</div><div class="cf-stat-value">3.8x</div><div class="cf-stat-note">Setiap Akun</div></article>
     </section>
 
     <section class="cf-panel">
         <div class="cf-panel-head">
-            <div class="cf-panel-title"><span class="cf-panel-symbol">▣</span><span>Daftar jumlah pesanan dan rekap transaksi pelanggan</span></div>
+            <div class="cf-panel-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Contacts--Streamline-Outlined-Material" height="24" width="24">
+  <desc>
+    Contacts Streamline Icon: https://streamlinehq.com
+  </desc>
+  <path fill="#000000" d="M3.59999 23v-1.5H20.4v1.5H3.59999Zm0 -20.5V1H20.4v1.5H3.59999ZM12 12.9c0.8333 0 1.5333 -0.28335 2.1 -0.85 0.56665 -0.56665 0.85 -1.26665 0.85 -2.1s-0.28335 -1.53335 -0.85 -2.1C13.5333 7.28335 12.8333 7 12 7c-0.83335 0 -1.53335 0.28335 -2.1 0.85 -0.5667 0.56665 -0.85 1.26665 -0.85 2.1s0.2833 1.53335 0.85 2.1c0.56665 0.56665 1.26665 0.85 2.1 0.85ZM3.29999 20c-0.4 0 -0.75 -0.15 -1.05 -0.45 -0.3 -0.3 -0.45 -0.65 -0.45 -1.05V5.5c0 -0.43335 0.15 -0.791665 0.45 -1.075 0.3 -0.283335 0.65 -0.425 1.05 -0.425H20.7c0.4 0 0.75 0.15 1.05 0.45 0.3 0.3 0.45 0.65 0.45 1.05v13c0 0.4 -0.15 0.75 -0.45 1.05 -0.3 0.3 -0.65 0.45 -1.05 0.45H3.29999ZM5.5 18.5c0.85 -1.05 1.8583 -1.8375 3.025 -2.3625 1.16665 -0.525 2.3208 -0.7875 3.4625 -0.7875 1.14165 0 2.3083 0.2625 3.5 0.7875C16.67915 16.6625 17.6833 17.45 18.5 18.5h2.2V5.5H3.29999v13H5.5Zm2.35 0h8.35c-0.5167 -0.5 -1.12085 -0.9 -1.8125 -1.2 -0.6917 -0.3 -1.4875 -0.45 -2.3875 -0.45 -0.9 0 -1.6875 0.15 -2.3625 0.45 -0.675 0.3 -1.27085 0.7 -1.7875 1.2Zm4.154 -7.1c-0.4027 0 -0.7415 -0.14165 -1.0165 -0.425 -0.275 -0.28335 -0.4125 -0.625 -0.4125 -1.025 0 -0.4 0.13615 -0.74165 0.4085 -1.025 0.2723 -0.28335 0.6098 -0.425 1.0125 -0.425 0.40265 0 0.7415 0.14165 1.0165 0.425 0.275 0.28335 0.4125 0.625 0.4125 1.025 0 0.4 -0.1362 0.74165 -0.4085 1.025 -0.27235 0.28335 -0.60985 0.425 -1.0125 0.425Z" stroke-width="0.5"></path>
+</svg><span>Daftar jumlah pesanan dan rekap transaksi pelanggan</span></div>
             <span class="cf-count">142 profil aktif</span>
         </div>
         <div class="cf-tools">
@@ -224,7 +322,11 @@ $pelanggan = [
     </select>
     <span></span>
 </label>
-            <button class="cf-control cf-export" type="button" onclick="cfExport()">⇩ Export</button>
+            <button class="cf-control cf-export" type="button" onclick="cfExport()"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.877a2 2 0 0 0 1.94-1.515L22 17" />
+</svg>
+ Export</button>
         </div>
         <div class="cf-table-wrap">
             <table>
@@ -249,8 +351,39 @@ $pelanggan = [
     <div class="cf-modal-card">
         <h3 id="cfModalTitle">Tambah Pelanggan</h3>
         <form id="cfForm">
-            <label>Nama Pelanggan<input id="cfName" required placeholder="Masukkan nama pelanggan"></label>
-            <label>Nomor WhatsApp<input id="cfPhone" required placeholder="+62 ..."></label>
+          <!-- Nama Pelanggan -->
+<label>
+    <span class="cf-label-text">Nama Pelanggan</span>
+
+    <div class="cf-input-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M0 0h24v24H0z" fill="none" />
+            <g fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="7" r="5" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M17 14h.352a3 3 0 0 1 2.976 2.628l.391 3.124A2 2 0 0 1 18.734 22H5.266a2 2 0 0 1-1.985-2.248l.39-3.124A3 3 0 0 1 6.649 14H7" />
+            </g>
+        </svg>
+
+        <input id="cfName" required placeholder="Masukkan nama pelanggan">
+    </div>
+</label>
+
+
+<!-- Nomor WhatsApp -->
+<label>
+    <span class="cf-label-text">Nomor WhatsApp</span>
+
+    <div class="cf-input-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M0 0h24v24H0z" fill="none" />
+            <path fill="currentColor"
+                d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
+        </svg>
+
+        <input id="cfPhone" required placeholder="+62 ...">
+    </div>
+</label>
             <div class="cf-modal-actions"><button type="button" onclick="cfCloseModal()">Batal</button><button type="submit">Simpan</button></div>
         </form>
     </div>
@@ -330,4 +463,4 @@ function cfExport() {
 cfRender();
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>  
