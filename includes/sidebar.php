@@ -166,6 +166,21 @@ $isMenu = function (array $prefixes) use ($currentRoute) {
                 <span>Log Aktivitas</span>
             </a>
 
+            <!-- 7. Rekap Absensi (Khusus Pemilik / Admin) -->
+            <?php if ($isPemilik): ?>
+            <?php $act = $isMenu(['absensi/rekap']); ?>
+            <a href="<?php echo $base; ?>absensi/rekap"
+               class="<?php echo $act
+                   ? 'bg-[#0085ff] text-white font-medium rounded-2xl shadow-sm shadow-[#0085ff]/20'
+                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 font-medium rounded-2xl'; ?> px-4 py-3 flex items-center gap-3.5 transition-colors"
+               <?php if ($act) echo 'aria-current="page"'; ?>>
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span>Rekap Absensi</span>
+            </a>
+            <?php endif; ?>
+
         </nav>
     </div>
 
