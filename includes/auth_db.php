@@ -102,6 +102,16 @@ function mulai_sesi(PDO $pdo, array $user, bool $ingat = false): void
     $idSesion = (int) $stmt->fetchColumn();
     $_SESSION['id_sesion'] = $idSesion;
 
+    // Jika role karyawan, simpan id_karyawan dan lakukan check-in otomatis
+    if ($user['role'] === 'karyawan') {
+        require_once dirname(__DIR__) . '/absensi/model.php';
+        $idKaryawan = absensi_ambil_id_karyawan($pdo, (int) $user['id_pengguna']);
+        if ($idKaryawan) {
+            $_SESSION['id_karyawan'] = $idKaryawan;
+            absensi_checkin_otomatis($pdo, $idKaryawan, (int) $user['id_pengguna']);
+        }
+    }
+
     // Pasang cookie Remember-Me jika dicentang
     if ($ingat) {
         $cookieValue  = $idSesion . ':' . $rawToken;
@@ -177,6 +187,16 @@ function pulihkan_dari_cookie(PDO $pdo): bool
     $_SESSION['role']      = $sesi['role'];
     $_SESSION['email']     = $sesi['email'];
     $_SESSION['id_sesion'] = (int) $sesi['id_sesion'];
+
+    // Jika role karyawan, simpan id_karyawan dan lakukan check-in otomatis pada hari baru
+    if ($sesi['role'] === 'karyawan') {
+        require_once dirname(__DIR__) . '/absensi/model.php';
+        $idKaryawan = absensi_ambil_id_karyawan($pdo, (int) $sesi['id_pengguna']);
+        if ($idKaryawan) {
+            $_SESSION['id_karyawan'] = $idKaryawan;
+            absensi_checkin_otomatis($pdo, $idKaryawan, (int) $sesi['id_pengguna']);
+        }
+    }
 
     return true;
 }
