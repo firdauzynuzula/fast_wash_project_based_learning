@@ -106,11 +106,11 @@ try {
         INSERT INTO pesanan (
             id_pelanggan, id_karyawan, kode_pesanan, tanggal_pesan,
             estimasi_selesai, status, subtotal_layanan, biaya_tambahan,
-            total_harga, status_bayar, catatan
+            total_harga, status_bayar, catatan, token_nota
         ) VALUES (
             :id_pelanggan, :id_karyawan, :kode_pesanan, NOW(),
             :estimasi_selesai, 'diterima', :subtotal_layanan, :biaya_tambahan,
-            :total_harga, :status_bayar, :catatan
+            :total_harga, :status_bayar, :catatan, :token_nota
         ) RETURNING id_pesanan
     ");
     $stmtDetail = $pdo->prepare("
@@ -130,6 +130,7 @@ try {
         VALUES (:id_pesanan, :jumlah, :jenis, 'valid', NOW())
     ");
 
+    $tokenNota = bin2hex(random_bytes(16));
     $idsBaru = [];
 
     foreach ($items as $it) {
@@ -156,6 +157,7 @@ try {
             'total_harga'      => $it['total'],
             'status_bayar'     => $statusBayar,
             'catatan'          => $catatanFinal ?: null,
+            'token_nota'       => $tokenNota,
         ]);
         $idPesanan = (int) $stmtPesanan->fetchColumn();
 

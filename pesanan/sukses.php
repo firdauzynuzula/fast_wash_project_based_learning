@@ -15,8 +15,8 @@ if (!$ids) {
 $placeholders = implode(',', array_fill(0, count($ids), '?'));
 $stmt = $pdo->prepare(
     "SELECT p.id_pesanan, p.kode_pesanan, p.total_harga,
-            p.status_bayar, p.catatan, p.tanggal_pesan,
-            pl.nama AS nama_pelanggan,
+            p.status_bayar, p.catatan, p.tanggal_pesan, p.token_nota,
+            pl.nama AS nama_pelanggan, pl.no_telepon,
             k.nama AS nama_karyawan,
             (SELECT string_agg(l.nama_layanan, ', ')
                FROM detail_pesanan d JOIN layanan l ON l.id_layanan = d.id_layanan
