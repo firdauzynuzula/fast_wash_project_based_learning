@@ -47,9 +47,6 @@ $routes = [
     'pesanan/proses_undo'  => 'pesanan/proses_undo.php',
     'pesanan/hapus'        => 'pesanan/hapus.php',
 
-    'transaksi/nota'       => 'transaksi/nota.php',
-    'transaksi/bayar'      => 'transaksi/bayar.php',
-
     'pembayaran'              => 'pembayaran/index.php',
     'pembayaran/index'        => 'pembayaran/index.php',
     'pembayaran/riwayat'      => 'pembayaran/riwayat.php',
@@ -60,6 +57,7 @@ $routes = [
     'absensi'                 => 'absensi/index.php',
     'absensi/index'           => 'absensi/index.php',
     'absensi/rekap'           => 'absensi/rekap.php',
+    'absensi/proses'          => 'absensi/proses.php',
 
     'log-activity'            => 'log-activity/index.php',
     'log-activity/index'      => 'log-activity/index.php',
