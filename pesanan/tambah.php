@@ -157,30 +157,33 @@ require_once __DIR__ . '/../includes/header.php';
     .tb-ta::placeholder { color: #9ca3af; }
 
     /* Kolom kanan */
-    .tb-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .tb-btn-add { display: block; width: 100%; height: 46px; box-sizing: border-box; border: 1.5px solid #0085ff; border-radius: 14px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .tb-right { position: sticky; top: 0; align-self: start; display: flex; flex-direction: column; gap: 16px; min-width: 0; max-height: calc(100vh - 104px); }
+    .tb-btn-add { flex-shrink: 0; display: block; width: 100%; height: 46px; box-sizing: border-box; border: 1.5px solid #0085ff; border-radius: 14px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .tb-btn-add:hover { background: #f0f7ff; }
-    .tb-sum { padding: 24px; }
-    .tb-sum-title { padding-bottom: 16px; border-bottom: 1px solid #eef2f7; margin-bottom: 18px; }
+    .tb-sum { padding: 24px; display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
+    .tb-sum-title { flex-shrink: 0; padding-bottom: 16px; border-bottom: 1px solid #eef2f7; margin-bottom: 18px; }
+    #ringkasanItems { flex: 1; min-height: 0; max-height: calc(100vh - 460px); overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+    #ringkasanItems::-webkit-scrollbar { display: block; width: 4px; }
+    #ringkasanItems::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .tb-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin-bottom: 14px; line-height: 1.3; min-height: 16px; }
     .tb-row .k { color: #374151; }
     .tb-row .v { color: #111827; font-weight: 500; text-align: right; max-width: 65%; word-break: break-word; overflow-wrap: anywhere; }
     .tb-sep { border: 0; border-top: 1px solid #eef2f7; margin: 4px 0 14px; }
-    .tb-total { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 20px; border-top: 1px solid #eef2f7; min-height: 20px; }
+    .tb-total { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 20px; border-top: 1px solid #eef2f7; min-height: 20px; }
     .tb-total .k { font-size: 13px; font-weight: 700; color: #111827; }
     .tb-total .v { font-size: 15px; font-weight: 700; color: #0085ff; }
 
-    .tb-pay-lbl { font-size: 12px; color: #374151; margin: 18px 0 10px; }
-    .tb-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .tb-pay-lbl { flex-shrink: 0; font-size: 12px; color: #374151; margin: 18px 0 10px; }
+    .tb-pills { flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .tb-pill { cursor: pointer; display: block; }
     .tb-pill input { position: absolute; opacity: 0; pointer-events: none; }
     .tb-pill span { display: block; box-sizing: border-box; text-align: center; padding: 10px 0; border-radius: 12px; background: #e8eff8; border: 1.5px solid transparent; font-size: 12px; font-weight: 500; color: #374151; }
     .tb-pill input:checked + span { background: #fff; border-color: #0085ff; color: #0085ff; }
 
-    .tb-btn-lunas { display: block; width: 100%; height: 44px; box-sizing: border-box; margin-top: 22px; border: 1.5px solid #0085ff; border-radius: 24px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .tb-btn-lunas { flex-shrink: 0; display: block; width: 100%; height: 44px; box-sizing: border-box; margin-top: 22px; border: 1.5px solid #0085ff; border-radius: 24px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .tb-btn-lunas.aktif { background: #e6f2ff; }
     .tb-btn-lunas.belum { border-color: #f59e0b; color: #d97706; background: #fffbeb; }
-    .tb-btn-buat { display: block; width: 100%; height: 46px; box-sizing: border-box; margin-top: 12px; border: 0; border-radius: 24px; background: #0085ff; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,133,255,.28); font-family: inherit; }
+    .tb-btn-buat { flex-shrink: 0; display: block; width: 100%; height: 46px; box-sizing: border-box; margin-top: 12px; border: 0; border-radius: 24px; background: #0085ff; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,133,255,.28); font-family: inherit; }
     .tb-btn-buat:hover { background: #0070d8; }
 
     .tb-alert { margin-bottom: 20px; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; }
@@ -220,6 +223,8 @@ require_once __DIR__ . '/../includes/header.php';
 
     @media (max-width: 1000px) {
         .tb-grid { grid-template-columns: 1fr; }
+        .tb-right { position: static; max-height: none; }
+        #ringkasanItems { max-height: none; }
     }
     @media (max-width: 640px) {
         .tb-two, .tb-svc-grid, .tb-inner-top { grid-template-columns: 1fr; }
@@ -389,7 +394,20 @@ function tambahPesanan() {
     jumlahPesanan++;
     hitungRingkasan();
     const cards = document.querySelectorAll('[data-order]');
-    cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const lastCard = cards[cards.length - 1];
+    const mainEl = document.querySelector('main');
+    if (mainEl && lastCard) {
+        const mainRect = mainEl.getBoundingClientRect();
+        const cardRect = lastCard.getBoundingClientRect();
+        mainEl.scrollTo({
+            top: mainEl.scrollTop + (cardRect.top - mainRect.top) - 20,
+            behavior: 'smooth'
+        });
+    }
+    const itemsEl = document.getElementById('ringkasanItems');
+    if (itemsEl) {
+        itemsEl.scrollTo({ top: itemsEl.scrollHeight, behavior: 'smooth' });
+    }
 }
 
 /* ---------- Berat ---------- */
