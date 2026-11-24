@@ -85,10 +85,84 @@ if (!$noRef) {
 $noWa = preg_replace('/\D/', '', (string) $pesanan['no_pelanggan']);
 if (str_starts_with($noWa, '0')) {
     $noWa = '62' . substr($noWa, 1);
+} elseif (str_starts_with($noWa, '8')) {
+    $noWa = '628' . substr($noWa, 1);
 }
-$pesanWa = "Halo {$pesanan['nama_pelanggan']}, berikut nota pesanan laundry Anda di Fast Wash.\n"
-         . "Kode: {$kode}\nTotal: " . $rp($totalHarga) . "\nStatus: " . ($isLunas ? 'LUNAS' : 'BELUM LUNAS')
-         . "\nEstimasi selesai: {$estimasi}\nTerima kasih telah mempercayakan laundry Anda kepada Fast Wash!";
+
+$tokenNota = $pesanan['token_nota'] ?? null;
+$urlNota   = '';
+if (!empty($tokenNota)) {
+    $notaBase = rtrim(getenv('NOTA_BASE_URL') ?: (getenv('APP_URL') ?: 'http://localhost:8000'), '/');
+    $urlNota  = $notaBase . '/nota/' . $tokenNota;
+}
+
+// Hitung total pembayaran yang sah dari riwayat transaksi
+$stmtSumBayar = $pdo->prepare(
+    "SELECT COALESCE(SUM(jumlah_bayar), 0)
+       FROM riwayat_transaksi
+      WHERE id_pesanan = :id AND status_transaksi = 'valid'"
+);
+$stmtSumBayar->execute(['id' => $id]);
+$totalBayar = (float) $stmtSumBayar->fetchColumn();
+if ($totalBayar <= 0 && $isLunas) {
+    $totalBayar = $totalHarga;
+}
+
+// Format komponen pesan WhatsApp
+$tglPesanIso = date('Y-m-d H:i:s', strtotime($pesanan['tanggal_pesan']));
+$statusBayarText = $isLunas ? 'Lunas' : ($totalBayar > 0 ? 'Sebagian' : 'Belum Lunas');
+if ($metodeLabel) {
+    $statusBayarText .= ' (' . $metodeLabel . ')';
+}
+$statusPengerjaanText = ucfirst(strtolower((string) $pesanan['status']));
+$noPelangganText = !empty($pesanan['no_pelanggan']) ? " ({$pesanan['no_pelanggan']})" : '';
+
+$estText = '-';
+if (!empty($pesanan['estimasi_selesai'])) {
+    $durasiHari = max(1, (int) round((strtotime($pesanan['estimasi_selesai']) - strtotime($pesanan['tanggal_pesan'])) / 86400));
+    $tglEst = date('Y-m-d', strtotime($pesanan['estimasi_selesai']));
+    $estText = "{$durasiHari} Hari {$tglEst}";
+}
+$catatanText = !empty($pesanan['catatan']) ? trim($pesanan['catatan']) : '-';
+
+$itemsText = '';
+foreach ($daftarDetail as $d) {
+    $subtotalItem = (float) $d['qty'] * (float) $d['harga_satuan'];
+    $satuanItem = !empty($d['satuan']) ? $d['satuan'] : 'kg';
+    $qtyItem = (float) $d['qty'];
+    $itemsText .= "{$d['nama_layanan']} (" . $rp($d['harga_satuan']) . " x {$qtyItem}{$satuanItem})\n"
+                . $rp($subtotalItem) . "\n";
+}
+$itemsText = rtrim($itemsText, "\n");
+
+$linkDigitalText = '';
+if (!empty($urlNota)) {
+    $linkDigitalText = "\n\nCek status laundry anda dengan mengklik link :\n" . $urlNota;
+}
+
+$pesanWa = "Fast Wash Laundry Services\n"
+         . "------------------------------\n"
+         . "No Nota : {$kode}\n"
+         . "Tanggal : {$tglPesanIso}\n"
+         . "Pembayaran : {$statusBayarText}\n"
+         . "Status : {$statusPengerjaanText}\n"
+         . "Nama : {$pesanan['nama_pelanggan']}{$noPelangganText}\n"
+         . "Est : {$estText}\n"
+         . "Note : {$catatanText}\n"
+         . "------------------------------\n"
+         . "{$itemsText}\n"
+         . "------------------------------\n"
+         . "SubTotal : " . $rp($subtotalLayanan) . "\n"
+         . "Total : " . $rp($totalHarga) . "\n"
+         . "Bayar : " . $rp($totalBayar) . "\n\n"
+         . "------------------------------\n"
+         . "Syarat dan Ketentuan:\n"
+         . "1. Pengambilan cucian harus disertai nota fisik / digital.\n"
+         . "2. Komplain maksimal 1x24 jam setelah cucian diambil.\n"
+         . "3. Item laundryan yang tidak diambil dalam 1 bulan di luar tanggung jawab kami.\n"
+         . "------------------------------"
+         . $linkDigitalText;
+
 $linkWa = 'https://wa.me/' . $noWa . '?text=' . rawurlencode($pesanWa);
 
 $breadcrumb = [
