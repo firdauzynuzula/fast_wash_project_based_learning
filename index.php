@@ -98,6 +98,12 @@ if (in_array($route, ['transaksi/status', 'transaksi/detail', 'pesanan/status', 
     exit;
 }
 
+// URL cantik nota pelanggan: nota/{32 hex token}
+if (preg_match('#^nota/([a-f0-9]{32})$#', $route, $matches)) {
+    $_GET['t'] = $matches[1];
+    $route = 'nota';
+}
+
 if (!isset($routes[$route])) {
     http_response_code(404);
     ?>
