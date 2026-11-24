@@ -5,5 +5,9 @@
     "license": "MIT",
     "require": {
         "php": ">=8.2"
+    },
+    "scripts": {
+        "migrate": "php migrate.php",
+        "migrate:status": "php migrate.php status"
     }
 }
