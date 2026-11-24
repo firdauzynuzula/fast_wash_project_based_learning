@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS pesanan (
     total_harga         NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (total_harga >= 0),
     status_bayar        VARCHAR(20)   NOT NULL DEFAULT 'belum_lunas',
     catatan             VARCHAR(255),
+    token_nota          VARCHAR(32),
     CONSTRAINT chk_pesanan_status
         CHECK (status IN ('pending', 'diterima', 'diproses', 'dicuci', 'dikeringkan', 'disetrika', 'selesai', 'diambil')),
     CONSTRAINT chk_pesanan_status_bayar
@@ -235,6 +236,7 @@ CREATE INDEX IF NOT EXISTS idx_pesanan_pelanggan        ON pesanan (id_pelanggan
 CREATE INDEX IF NOT EXISTS idx_pesanan_karyawan         ON pesanan (id_karyawan);
 CREATE INDEX IF NOT EXISTS idx_pesanan_status           ON pesanan (status);
 CREATE INDEX IF NOT EXISTS idx_pesanan_status_bayar     ON pesanan (status_bayar);
+CREATE INDEX IF NOT EXISTS idx_pesanan_token_nota        ON pesanan (token_nota);
 CREATE INDEX IF NOT EXISTS idx_pesanan_tanggal_pesan    ON pesanan (tanggal_pesan);
 CREATE INDEX IF NOT EXISTS idx_detail_pesanan_pesanan   ON detail_pesanan (id_pesanan);
 CREATE INDEX IF NOT EXISTS idx_detail_pesanan_layanan   ON detail_pesanan (id_layanan);
@@ -510,7 +512,8 @@ SELECT p.id_pesanan,
        p.status_bayar,
        p.catatan,
        t.jenis_pembayaran AS metode_pembayaran,
-       t.tanggal_bayar
+       t.tanggal_bayar,
+       p.token_nota
   FROM pesanan p
   JOIN pelanggan pl ON pl.id_pelanggan = p.id_pelanggan
   JOIN karyawan k   ON k.id_karyawan   = p.id_karyawan
@@ -630,7 +633,8 @@ INSERT INTO pelanggan (nama, no_telepon, tanggal_daftar) VALUES
     ('Areta Neila',         '081234567813', NOW() - INTERVAL '5 days'),
     ('Ayusha Marella',      '081234567814', NOW() - INTERVAL '4 days'),
     ('Lucky Satria Utama',  '081234567815', NOW() - INTERVAL '2 days'),
-    ('Muhammad Nayaka',     '081234567816', NOW() - INTERVAL '1 day')
+    ('Muhammad Nayaka',     '081234567816', NOW() - INTERVAL '1 day'),
+    ('dalta-Nadin',         '081259745399', NOW())
 ON CONFLICT (no_telepon) DO NOTHING;
 
 -- 5. SEED PENGGUNA (AKUN LOGIN SISTEM)

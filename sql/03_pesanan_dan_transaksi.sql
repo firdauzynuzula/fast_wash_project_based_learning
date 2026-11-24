@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS pesanan (
     total_harga         NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (total_harga >= 0),
     status_bayar        VARCHAR(20)   NOT NULL DEFAULT 'belum_lunas',
     catatan             VARCHAR(255),
+    token_nota          VARCHAR(32),
     CONSTRAINT chk_pesanan_status
         CHECK (status IN ('pending', 'diterima', 'diproses', 'dicuci', 'dikeringkan', 'disetrika', 'selesai', 'diambil')),
     CONSTRAINT chk_pesanan_status_bayar
@@ -90,5 +91,7 @@ ALTER TABLE pesanan ADD CONSTRAINT chk_pesanan_status
     CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil'));
 ALTER TABLE riwayat_status_pesanan ADD CONSTRAINT chk_riwayat_status
     CHECK (status IN ('diterima', 'diproses', 'selesai', 'diambil'));
+
+ALTER TABLE pesanan ADD COLUMN IF NOT EXISTS token_nota VARCHAR(32);
 
 COMMIT;

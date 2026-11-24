@@ -13,6 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_pesanan_pelanggan        ON pesanan (id_pelanggan
 CREATE INDEX IF NOT EXISTS idx_pesanan_karyawan         ON pesanan (id_karyawan);
 CREATE INDEX IF NOT EXISTS idx_pesanan_status           ON pesanan (status);
 CREATE INDEX IF NOT EXISTS idx_pesanan_status_bayar     ON pesanan (status_bayar);
+CREATE INDEX IF NOT EXISTS idx_pesanan_token_nota        ON pesanan (token_nota);
 CREATE INDEX IF NOT EXISTS idx_pesanan_tanggal_pesan    ON pesanan (tanggal_pesan);
 CREATE INDEX IF NOT EXISTS idx_detail_pesanan_pesanan   ON detail_pesanan (id_pesanan);
 CREATE INDEX IF NOT EXISTS idx_detail_pesanan_layanan   ON detail_pesanan (id_layanan);

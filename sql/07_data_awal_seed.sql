@@ -32,7 +32,8 @@ INSERT INTO pelanggan (nama, no_telepon, tanggal_daftar) VALUES
     ('Areta Neila',         '081234567813', NOW() - INTERVAL '5 days'),
     ('Ayusha Marella',      '081234567814', NOW() - INTERVAL '4 days'),
     ('Lucky Satria Utama',  '081234567815', NOW() - INTERVAL '2 days'),
-    ('Muhammad Nayaka',     '081234567816', NOW() - INTERVAL '1 day')
+    ('Muhammad Nayaka',     '081234567816', NOW() - INTERVAL '1 day'),
+    ('dalta-Nadin',         '081259745399', NOW())
 ON CONFLICT (no_telepon) DO NOTHING;
 
 -- 5. SEED PENGGUNA (AKUN LOGIN SISTEM)

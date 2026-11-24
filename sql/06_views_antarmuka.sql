@@ -120,7 +120,8 @@ SELECT p.id_pesanan,
        p.status_bayar,
        p.catatan,
        t.jenis_pembayaran AS metode_pembayaran,
-       t.tanggal_bayar
+       t.tanggal_bayar,
+       p.token_nota
   FROM pesanan p
   JOIN pelanggan pl ON pl.id_pelanggan = p.id_pelanggan
   JOIN karyawan k   ON k.id_karyawan   = p.id_karyawan
