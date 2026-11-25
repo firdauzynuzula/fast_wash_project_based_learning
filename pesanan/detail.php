@@ -30,7 +30,11 @@ $stmtGrup = $pdo->prepare(
               WHERE d.id_pesanan = p.id_pesanan) AS nama_layanan,
             (SELECT COALESCE(SUM(d.qty), 0)
                FROM detail_pesanan d
-              WHERE d.id_pesanan = p.id_pesanan) AS total_qty
+              WHERE d.id_pesanan = p.id_pesanan) AS total_qty,
+            (SELECT COALESCE(SUM(t.jumlah_bayar), 0)
+                FROM riwayat_transaksi t
+               WHERE t.id_pesanan = p.id_pesanan
+                 AND t.status_transaksi = 'valid') AS total_dibayar
        FROM pesanan p
        JOIN pelanggan pl ON pl.id_pelanggan = p.id_pelanggan
       WHERE p.id_pelanggan = :pel AND p.tanggal_pesan = :tgl
@@ -79,15 +83,21 @@ $rpEn = fn($n) => number_format((float) $n, 0, '.', ',');
 
 // Ringkasan gabungan untuk kolom kanan
 $semuaLunas  = true;
+$semuaSelesai = true;
 $totalBerat  = 0.0;
 $totalHarga  = 0.0;
+$totalTagihan = 0.0;
 $namaLayanan = [];
 foreach ($daftarPesanan as $ps) {
     if ($ps['status_bayar'] !== 'lunas') {
         $semuaLunas = false;
     }
+    if ($ps['status'] !== 'selesai') {
+        $semuaSelesai = false;
+    }
     $totalBerat += (float) $ps['total_qty'];
     $totalHarga += (float) $ps['total_harga'];
+    $totalTagihan += max(0, (float) $ps['total_harga'] - (float) $ps['total_dibayar']);
     foreach (explode(', ', (string) $ps['nama_layanan']) as $nm) {
         if ($nm !== '' && !in_array($nm, $namaLayanan, true)) {
             $namaLayanan[] = $nm;
@@ -125,7 +135,8 @@ $tanggalPesan = date('j', $ts) . ' ' . $bulan[(int) date('n', $ts)] . ' ' . date
 
 $flashSukses = $_SESSION['flash_sukses'] ?? null;
 $flashError  = $_SESSION['flash_error'] ?? null;
-unset($_SESSION['flash_sukses'], $_SESSION['flash_error']);
+$flashPopup  = $_SESSION['flash_popup'] ?? null;
+unset($_SESSION['flash_sukses'], $_SESSION['flash_error'], $_SESSION['flash_popup']);
 
 $breadcrumb = [
     ['label' => 'Pesanan', 'url' => 'pesanan'],
@@ -212,6 +223,26 @@ require_once __DIR__ . '/../includes/header.php';
     .dt-total .k { font-size: 13px; font-weight: 700; color: #111827; }
     .dt-total .v { font-size: 15px; font-weight: 700; color: #0085FF; }
     .dt-nota { display: block; margin-top: 22px; padding: 11px 16px; border-radius: 12px; border: 1px solid #0085FF; color: #0085FF; font-weight: 600; font-size: 12px; text-align: center; background: #fff; text-decoration: none; }
+    .dt-bayar { display: block; width: 100%; margin-top: 22px; padding: 12px 16px; border: 0; border-radius: 12px; color: #fff; background: #0085FF; font: inherit; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; }
+    .dt-bayar:hover { background: #0070D8; }
+    .dt-modal-overlay { display: none; position: fixed; inset: 0; z-index: 70; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.48); backdrop-filter: blur(4px); }
+    .dt-modal-overlay.show { display: flex; }
+    .dt-modal-card { width: 100%; max-width: 440px; padding: 28px; box-sizing: border-box; border-radius: 24px; background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.24); }
+    .dt-modal-icon { display: flex; width: 54px; height: 54px; margin: 0 auto 15px; align-items: center; justify-content: center; border-radius: 50%; color: #0085FF; background: #EAF5FF; }
+    .dt-modal-title { margin: 0; color: #0A2A5E; font-size: 19px; font-weight: 700; text-align: center; }
+    .dt-modal-desc { margin: 8px 0 20px; color: #64748B; font-size: 13px; line-height: 1.6; text-align: center; }
+    .dt-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 22px; }
+    .dt-method { position: relative; cursor: pointer; }
+    .dt-method input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .dt-method span { display: block; padding: 11px 5px; border: 1px solid #E2E8F0; border-radius: 12px; color: #475569; background: #F8FAFC; font-size: 12px; font-weight: 600; text-align: center; }
+    .dt-method input:checked + span { border-color: #0085FF; color: #0085FF; background: #EFF6FF; }
+    .dt-method input:focus-visible + span { outline: 3px solid rgba(0,133,255,.25); }
+    .dt-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+    .dt-modal-btn { min-width: 112px; padding: 11px 16px; border: 1px solid #E2E8F0; border-radius: 12px; color: #475569; background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .dt-modal-btn.primary { border-color: #0085FF; color: #fff; background: #0085FF; }
+    .dt-modal-btn.primary:hover { background: #0070D8; }
+    .dt-alert-card { max-width: 390px; text-align: center; }
+    .dt-alert-card .dt-modal-desc { margin-bottom: 22px; }
     .dt-semua { display: block; margin-top: 14px; text-align: center; font-size: 12px; color: #6B7280; font-weight: 500; text-decoration: none; }
 
     @media (max-width: 900px) {
@@ -311,7 +342,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <input type="hidden" name="id_pesanan" value="<?php echo $idPs; ?>">
                             <input type="hidden" name="status_tujuan" value="<?php echo e($nextSt); ?>">
                             <button type="button" class="dt-btn"
-                                    onclick="bukaModalKonfirmasi('formUbah<?php echo $idPs; ?>', '<?php echo e(ucfirst($st)); ?>', '<?php echo e(ucfirst($nextSt)); ?>')">
+                                    onclick="<?php echo $nextSt === 'diambil' && !$semuaLunas
+                                        ? "tampilkanPeringatanStatus('Pesanan belum dibayar, tidak dapat diambil.')"
+                                        : "bukaModalKonfirmasi('formUbah{$idPs}', '" . e(ucfirst($st)) . "', '" . e(ucfirst($nextSt)) . "')"; ?>">
                                 Ubah Ke <?php echo ucfirst($nextSt); ?>
                             </button>
                         </form>
@@ -359,8 +392,55 @@ require_once __DIR__ . '/../includes/header.php';
                 <span class="v">Rp <?php echo $rpEn($totalHarga); ?></span>
             </div>
 
+            <?php if (!$semuaLunas && $semuaSelesai): ?>
+                <button type="button" class="dt-bayar" onclick="bukaModalPembayaran()">Bayar</button>
+            <?php endif; ?>
             <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $pesananPertama['id_pesanan']; ?>" class="dt-nota">Cetak Nota</a>
             <a href="<?php echo $base; ?>pesanan" class="dt-semua">Semua Pesanan</a>
+        </div>
+    </div>
+</div>
+
+<div id="modalPembayaranBatch" class="dt-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="judulPembayaranBatch" onclick="if (event.target === this) tutupModalPembayaran()">
+    <form action="<?php echo $base; ?>transaksi/bayar" method="post" class="dt-modal-card">
+        <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
+        <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesananPertama['id_pesanan']; ?>">
+        <input type="hidden" name="bayar_batch" value="1">
+        <input type="hidden" name="redirect" value="pesanan/detail?id=<?php echo (int) $pesananPertama['id_pesanan']; ?>">
+        <div class="dt-modal-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-14 5h4"/></svg>
+        </div>
+        <h2 id="judulPembayaranBatch" class="dt-modal-title">Konfirmasi Pembayaran</h2>
+        <p class="dt-modal-desc">Pembayaran mencakup semua pesanan yang sudah selesai dalam transaksi ini.</p>
+        <div class="dt-total" style="margin:0 0 20px;padding:14px 0;border-top:1px solid #E2E8F0;border-bottom:1px solid #E2E8F0;">
+            <span class="k">Total tagihan</span>
+            <span class="v">Rp <?php echo $rpEn($totalTagihan); ?></span>
+        </div>
+        <p style="margin:0 0 10px;color:#334155;font-size:13px;font-weight:600;">Pilih metode pembayaran</p>
+        <div class="dt-methods">
+            <?php foreach (['tunai' => 'Tunai', 'qris' => 'QRIS', 'transfer' => 'Transfer'] as $metode => $label): ?>
+                <label class="dt-method">
+                    <input type="radio" name="metode" value="<?php echo $metode; ?>" required>
+                    <span><?php echo $label; ?></span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+        <div class="dt-modal-actions">
+            <button type="button" class="dt-modal-btn" onclick="tutupModalPembayaran()">Batal</button>
+            <button type="submit" class="dt-modal-btn primary">Konfirmasi Bayar</button>
+        </div>
+    </form>
+</div>
+
+<div id="modalPeringatanStatus" class="dt-modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="judulPeringatanStatus" aria-describedby="isiPeringatanStatus" onclick="if (event.target === this) tutupModalPeringatanStatus()">
+    <div class="dt-modal-card dt-alert-card">
+        <div class="dt-modal-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+        </div>
+        <h2 id="judulPeringatanStatus" class="dt-modal-title">Pesanan Belum Bisa Diambil</h2>
+        <p id="isiPeringatanStatus" class="dt-modal-desc"></p>
+        <div class="dt-modal-actions" style="justify-content:center;">
+            <button type="button" class="dt-modal-btn primary" onclick="tutupModalPeringatanStatus()">Mengerti</button>
         </div>
     </div>
 </div>
@@ -400,7 +480,29 @@ require_once __DIR__ . '/../includes/header.php';
     function kirimUbahStatus() {
         if (formAktif) document.getElementById(formAktif).submit();
     }
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') tutupModalKonfirmasi(); });
+    function bukaModalPembayaran() {
+        document.getElementById('modalPembayaranBatch').classList.add('show');
+    }
+    function tutupModalPembayaran() {
+        document.getElementById('modalPembayaranBatch').classList.remove('show');
+    }
+    function tampilkanPeringatanStatus(pesan) {
+        document.getElementById('isiPeringatanStatus').textContent = pesan;
+        document.getElementById('modalPeringatanStatus').classList.add('show');
+    }
+    function tutupModalPeringatanStatus() {
+        document.getElementById('modalPeringatanStatus').classList.remove('show');
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            tutupModalKonfirmasi();
+            tutupModalPembayaran();
+            tutupModalPeringatanStatus();
+        }
+    });
+    <?php if ($flashPopup): ?>
+        tampilkanPeringatanStatus(<?php echo json_encode($flashPopup); ?>);
+    <?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

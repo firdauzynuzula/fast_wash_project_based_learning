@@ -9,28 +9,29 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 csrf_check();
 
-$idPesanan = (int) ($_POST['id_pesanan'] ?? 0);
-$metode    = strtolower(trim($_POST['metode'] ?? 'tunai'));
-$redirect  = trim($_POST['redirect'] ?? '');
+$idPesanan  = (int) ($_POST['id_pesanan'] ?? 0);
+$metode     = strtolower(trim($_POST['metode'] ?? ''));
+$redirect   = trim($_POST['redirect'] ?? '');
+$bayarBatch = ($_POST['bayar_batch'] ?? '') === '1';
+$target     = $redirect !== '' ? $base . $redirect : $base . 'pesanan';
 
 if (!in_array($metode, ['tunai', 'qris', 'transfer'], true)) {
-    $metode = 'tunai';
+    $_SESSION['flash_error'] = 'Silakan pilih metode pembayaran yang valid.';
+    header('Location: ' . $target);
+    exit;
 }
 
-$stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, total_harga, status_bayar FROM pesanan WHERE id_pesanan = :id");
+$stmt = $pdo->prepare("
+    SELECT id_pesanan, kode_pesanan, id_pelanggan, tanggal_pesan
+      FROM pesanan
+     WHERE id_pesanan = :id
+");
 $stmt->execute(['id' => $idPesanan]);
 $pesanan = $stmt->fetch();
 
 if (!$pesanan) {
     $_SESSION['flash_error'] = 'Pesanan tidak ditemukan.';
     header('Location: ' . $base . 'pesanan');
-    exit;
-}
-
-if ($pesanan['status_bayar'] === 'lunas') {
-    $_SESSION['flash_sukses'] = "Pesanan {$pesanan['kode_pesanan']} sudah berstatus Lunas.";
-    $target = $redirect ? ($base . $redirect) : ($base . 'pesanan');
-    header('Location: ' . $target);
     exit;
 }
 
@@ -42,8 +43,68 @@ if (!$checkKaryawan->fetch()) {
 }
 
 try {
-    // Catat ke riwayat_transaksi
-    // Trigger trg_transaksi_sinkron_bayar di PostgreSQL akan otomatis mengupdate status_bayar di tabel pesanan menjadi 'lunas'
+    $pdo->beginTransaction();
+
+    $stmtLockGroup = $pdo->prepare("
+        SELECT id_pesanan
+          FROM pesanan
+         WHERE id_pelanggan = :id_pelanggan
+           AND tanggal_pesan = :tanggal_pesan
+         ORDER BY id_pesanan
+         FOR UPDATE
+    ");
+    $stmtLockGroup->execute([
+        'id_pelanggan' => $pesanan['id_pelanggan'],
+        'tanggal_pesan' => $pesanan['tanggal_pesan'],
+    ]);
+
+    $stmtGroup = $pdo->prepare("
+        SELECT p.id_pesanan,
+               p.kode_pesanan,
+               p.total_harga,
+               p.status,
+               p.status_bayar,
+               COALESCE((
+                   SELECT SUM(t.jumlah_bayar)
+                     FROM riwayat_transaksi t
+                    WHERE t.id_pesanan = p.id_pesanan
+                      AND t.status_transaksi = 'valid'
+               ), 0) AS total_dibayar
+          FROM pesanan p
+         WHERE p.id_pelanggan = :id_pelanggan
+           AND p.tanggal_pesan = :tanggal_pesan
+         ORDER BY p.id_pesanan
+    ");
+    $stmtGroup->execute([
+        'id_pelanggan' => $pesanan['id_pelanggan'],
+        'tanggal_pesan' => $pesanan['tanggal_pesan'],
+    ]);
+    $grupPesanan = $stmtGroup->fetchAll();
+
+    $pesananBelumLunas = array_values(array_filter(
+        $grupPesanan,
+        static fn(array $item): bool => $item['status_bayar'] !== 'lunas'
+            && ($bayarBatch || (int) $item['id_pesanan'] === $idPesanan)
+    ));
+
+    if (!$pesananBelumLunas) {
+        $pdo->commit();
+        $_SESSION['flash_sukses'] = $bayarBatch
+            ? 'Semua pesanan dalam transaksi ini sudah berstatus lunas.'
+            : "Pesanan {$pesanan['kode_pesanan']} sudah berstatus Lunas.";
+        header('Location: ' . $target);
+        exit;
+    }
+
+    foreach ($grupPesanan as $item) {
+        if ($item['status'] !== 'selesai') {
+            $pdo->rollBack();
+            $_SESSION['flash_error'] = 'Pembayaran baru dapat dikonfirmasi setelah semua pesanan selesai.';
+            header('Location: ' . $target);
+            exit;
+        }
+    }
+
     $stmtBayar = $pdo->prepare("
         INSERT INTO riwayat_transaksi (
             id_karyawan, id_pesanan, tanggal_bayar, jumlah_bayar, jenis_pembayaran, status_transaksi
@@ -51,19 +112,41 @@ try {
             :id_karyawan, :id_pesanan, NOW(), :jumlah_bayar, :jenis_pembayaran, 'valid'
         )
     ");
-    $stmtBayar->execute([
-        'id_karyawan'      => $idKaryawan,
-        'id_pesanan'       => $idPesanan,
-        'jumlah_bayar'     => $pesanan['total_harga'],
-        'jenis_pembayaran' => $metode,
-    ]);
 
-    $_SESSION['flash_sukses'] = "Pembayaran pesanan {$pesanan['kode_pesanan']} sebesar Rp " . number_format((float) $pesanan['total_harga'], 0, ',', '.') . " (" . strtoupper($metode) . ") berhasil dikonfirmasi LUNAS.";
+    $totalDibayar = 0.0;
+    $jumlahPesananDibayar = 0;
+    foreach ($pesananBelumLunas as $item) {
+        $jumlahBayar = max(0, (float) $item['total_harga'] - (float) $item['total_dibayar']);
+        if ($jumlahBayar <= 0) {
+            continue;
+        }
 
+        $stmtBayar->execute([
+            'id_karyawan'      => $idKaryawan,
+            'id_pesanan'       => $item['id_pesanan'],
+            'jumlah_bayar'     => $jumlahBayar,
+            'jenis_pembayaran' => $metode,
+        ]);
+        $totalDibayar += $jumlahBayar;
+        $jumlahPesananDibayar++;
+    }
+
+    $pdo->commit();
+
+    if ($bayarBatch) {
+        $_SESSION['flash_sukses'] = 'Pembayaran ' . $jumlahPesananDibayar
+            . ' pesanan sebesar Rp ' . number_format($totalDibayar, 0, ',', '.')
+            . ' (' . strtoupper($metode) . ') berhasil dikonfirmasi.';
+    } else {
+        $_SESSION['flash_sukses'] = "Pembayaran pesanan {$pesanan['kode_pesanan']} sebesar Rp "
+            . number_format($totalDibayar, 0, ',', '.') . ' (' . strtoupper($metode) . ') berhasil dicatat.';
+    }
 } catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     $_SESSION['flash_error'] = 'Gagal mencatat pembayaran: ' . $e->getMessage();
 }
 
-$target = $redirect ? ($base . $redirect) : ($base . 'pesanan');
 header('Location: ' . $target);
 exit;

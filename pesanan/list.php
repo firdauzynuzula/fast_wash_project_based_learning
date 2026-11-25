@@ -18,9 +18,8 @@ $filterStatus = trim($_GET['status'] ?? '');
 $filterBayar  = trim($_GET['bayar'] ?? '');
 
 // Pagination (5 baris per halaman, sesuai desain)
-$halamanAktif = max(1, (int) ($_GET['page'] ?? 1));
-$limit        = 5;
-$offset       = ($halamanAktif - 1) * $limit;
+$halamanDiminta = max(1, (int) ($_GET['page'] ?? 1));
+$limit          = 5;
 
 $sqlWhere = " WHERE 1=1";
 $params = [];
@@ -42,13 +41,27 @@ $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM pesanan p JOIN pelanggan pl ON 
 $stmtCount->execute($params);
 $totalPesanan = (int) $stmtCount->fetchColumn();
 $totalHalaman = max(1, (int) ceil($totalPesanan / $limit));
+$halamanAktif = min($halamanDiminta, $totalHalaman);
+$offset       = ($halamanAktif - 1) * $limit;
 
 $sql = "SELECT p.id_pesanan,
                p.kode_pesanan,
                pl.nama AS nama_pelanggan,
                p.status AS progres_cucian,
                p.status_bayar AS status_pembayaran,
-               p.total_harga
+               GREATEST(0, p.total_harga - COALESCE((
+                   SELECT SUM(t.jumlah_bayar)
+                     FROM riwayat_transaksi t
+                    WHERE t.id_pesanan = p.id_pesanan
+                      AND t.status_transaksi = 'valid'
+               ), 0)) AS total_tagihan,
+               CASE WHEN NOT EXISTS (
+                   SELECT 1
+                     FROM pesanan p2
+                    WHERE p2.id_pelanggan = p.id_pelanggan
+                      AND p2.tanggal_pesan = p.tanggal_pesan
+                      AND p2.status <> 'selesai'
+               ) THEN 1 ELSE 0 END AS semua_selesai
           FROM pesanan p
           JOIN pelanggan pl ON pl.id_pelanggan = p.id_pelanggan
           {$sqlWhere}
@@ -101,8 +114,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
             <svg width="16" height="16" fill="none" stroke="#9CA3AF" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
         </div>
         <input type="text" name="cari" value="<?php echo e($cari); ?>" placeholder="Cari Nama Pelanggan / Kode Pesanan"
-               style="<?php echo $styleKotak; ?> width: 100%; padding: 0 40px 0 40px;">
-        <div style="position: absolute; top: 0; bottom: 0; right: 14px; display: flex; align-items: center; pointer-events: none;"><?php echo $iconChevron; ?></div>
+               style="<?php echo $styleKotak; ?> width: 100%; padding: 0 16px 0 40px;">
     </div>
 
     <!-- Status Cucian -->
@@ -164,6 +176,7 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                         <?php
                         $st      = strtolower($row['progres_cucian']);
                         $isLunas = ($row['status_pembayaran'] === 'lunas');
+                        $semuaSelesai = (int) $row['semua_selesai'] === 1;
 
                         $badgeProgres = match ($st) {
                             'diterima' => ['Diterima', 'border border-blue-200 text-sky-600 bg-sky-50'],
@@ -195,9 +208,9 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                                         <a href="<?php echo $base . $detailPath; ?>?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>" style="<?php echo $btnStatusStyle; ?>">Status</a>
                                         <?php if ($isLunas): ?>
                                             <a href="<?php echo $base; ?>transaksi/nota?id=<?php echo (int) $row['id_pesanan']; ?>" class="<?php echo $btnAksi; ?>" style="<?php echo $btnNotaStyle; ?>">Lihat Nota</a>
-                                        <?php else: ?>
+                                        <?php elseif ($semuaSelesai): ?>
                                             <button type="button"
-                                                    onclick="bukaModalBayar(<?php echo (int) $row['id_pesanan']; ?>, '<?php echo e($row['kode_pesanan']); ?>', '<?php echo e($row['nama_pelanggan']); ?>', <?php echo (float) $row['total_harga']; ?>)"
+                                                    onclick="bukaModalBayar(<?php echo (int) $row['id_pesanan']; ?>, '<?php echo e($row['kode_pesanan']); ?>', '<?php echo e($row['nama_pelanggan']); ?>', <?php echo (float) $row['total_tagihan']; ?>)"
                                                     class="<?php echo $btnAksi; ?>" style="<?php echo $btnBayarStyle; ?>">Bayar</button>
                                         <?php endif; ?>
                                     <?php endif; ?>
@@ -220,13 +233,19 @@ $iconChevron = '<svg width="16" height="16" fill="none" stroke="#6B7280" stroke-
                     <span class="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-300 rounded-lg">Sebelumnya</span>
                 <?php endif; ?>
 
-                <?php for ($i = 1; $i <= $totalHalaman; $i++): ?>
+                <?php
+                $halamanMulai = max(1, min($halamanAktif - 1, $totalHalaman - 2));
+                $halamanAkhir = min($totalHalaman, $halamanMulai + 2);
+                ?>
+                <?php if ($halamanMulai > 1): ?><span class="px-1 text-slate-400">…</span><?php endif; ?>
+                <?php for ($i = $halamanMulai; $i <= $halamanAkhir; $i++): ?>
                     <?php if ($i === $halamanAktif): ?>
                         <span class="px-3 py-1.5 bg-[#0085ff] text-white font-semibold rounded-lg"><?php echo $i; ?></span>
                     <?php else: ?>
                         <a href="<?php echo $qs($i); ?>" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"><?php echo $i; ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
+                <?php if ($halamanAkhir < $totalHalaman): ?><span class="px-1 text-slate-400">…</span><?php endif; ?>
 
                 <?php if ($halamanAktif < $totalHalaman): ?>
                     <a href="<?php echo $qs($halamanAktif + 1); ?>" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">Berikutnya</a>

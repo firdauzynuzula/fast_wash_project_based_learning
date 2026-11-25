@@ -24,7 +24,7 @@ $teleponBaru = trim($_POST['telepon_baru'] ?? '');
 
 if ($idPelanggan <= 0) {
     if ($namaBaru === '') {
-        kembaliError('Silakan pilih pelanggan atau isi nama pelanggan baru.');
+        kembaliError('Silakan masukan data pelanggan.');
     }
     if ($teleponBaru === '') {
         kembaliError('Nomor WhatsApp pelanggan baru wajib diisi.');
@@ -39,10 +39,13 @@ if (!is_array($orders) || count($orders) === 0) {
 
 $statusBayar = (($_POST['status_bayar'] ?? '') === 'lunas') ? 'lunas' : 'belum_lunas';
 
-// Metode pembayaran dipilih di ringkasan pesanan (berlaku untuk semua pesanan)
-$metodeBayar = strtolower(trim($_POST['metode_pembayaran'] ?? 'tunai'));
-if (!in_array($metodeBayar, ['tunai', 'qris', 'transfer'], true)) {
-    $metodeBayar = 'tunai';
+// Metode pembayaran hanya wajib dipilih jika pelanggan membayar saat membuat pesanan.
+$metodeBayar = strtolower(trim($_POST['metode_pembayaran'] ?? ''));
+if ($statusBayar === 'lunas' && !in_array($metodeBayar, ['tunai', 'qris', 'transfer'], true)) {
+    kembaliError('Silakan pilih metode pembayaran.');
+}
+if ($statusBayar !== 'lunas') {
+    $metodeBayar = null;
 }
 
 $stmtLay = $pdo->prepare("SELECT id_layanan, nama_layanan, harga, durasi_jam FROM layanan WHERE id_layanan = :id");

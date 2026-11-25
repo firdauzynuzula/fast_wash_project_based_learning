@@ -16,6 +16,7 @@ try {
         // Aman dipakai lewat connection pooler (mis. Supabase) dan lokal.
         PDO::ATTR_EMULATE_PREPARES   => true,
     ]);
+    $pdo->exec("SET TIME ZONE 'Asia/Jakarta'");
 } catch (PDOException $e) {
     // Pesan asli memuat host/db/user — jangan tampilkan ke pengunjung.
     error_log('Koneksi database gagal: ' . $e->getMessage());

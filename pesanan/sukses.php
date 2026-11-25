@@ -69,7 +69,7 @@ require_once __DIR__ . '/../includes/header.php';
     @media print {
         @page {
             margin: 0;
-            size: auto;
+            size: 58mm 90mm;
         }
         html, body {
             width: 58mm;
