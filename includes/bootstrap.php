@@ -1,6 +1,7 @@
 <?php
 // Wajib di-require PERTAMA oleh setiap entry file di webroot.
 session_start();
+date_default_timezone_set('Asia/Jakarta');
 
 // Muat .env (KEY=VALUE per baris) jika ada — tanpa dependency.
 $envFile = dirname(__DIR__) . '/.env';

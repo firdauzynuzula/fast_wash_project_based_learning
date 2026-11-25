@@ -19,7 +19,7 @@ if ($idPesanan <= 0 || !in_array($statusTujuan, ['diterima', 'diproses', 'selesa
 }
 
 // Ambil status saat ini
-$stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar FROM pesanan WHERE id_pesanan = :id");
+$stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar, id_pelanggan, tanggal_pesan FROM pesanan WHERE id_pesanan = :id");
 $stmt->execute(['id' => $idPesanan]);
 $pesanan = $stmt->fetch();
 
@@ -54,6 +54,39 @@ if (!$checkKaryawan->fetch()) {
 
 try {
     $pdo->beginTransaction();
+
+    $stmtLockGroup = $pdo->prepare("
+        SELECT id_pesanan
+          FROM pesanan
+         WHERE id_pelanggan = :id_pelanggan AND tanggal_pesan = :tanggal_pesan
+         ORDER BY id_pesanan
+         FOR UPDATE
+    ");
+    $stmtLockGroup->execute([
+        'id_pelanggan' => $pesanan['id_pelanggan'],
+        'tanggal_pesan' => $pesanan['tanggal_pesan'],
+    ]);
+
+    if ($statusTujuan === 'diambil') {
+        $stmtBelumLunas = $pdo->prepare("
+            SELECT COUNT(*)
+              FROM pesanan
+             WHERE id_pelanggan = :id_pelanggan
+               AND tanggal_pesan = :tanggal_pesan
+               AND status_bayar <> 'lunas'
+        ");
+        $stmtBelumLunas->execute([
+            'id_pelanggan' => $pesanan['id_pelanggan'],
+            'tanggal_pesan' => $pesanan['tanggal_pesan'],
+        ]);
+        if ((int) $stmtBelumLunas->fetchColumn() > 0) {
+            $pdo->rollBack();
+            $_SESSION['flash_popup'] = 'Pesanan belum dibayar, tidak dapat diambil.';
+            $_SESSION['flash_error'] = 'Pesanan belum dibayar, tidak dapat diambil.';
+            header('Location: ' . $base . 'pesanan/detail?id=' . $idPesanan);
+            exit;
+        }
+    }
 
     // Update status pesanan
     $stmtUpdate = $pdo->prepare("

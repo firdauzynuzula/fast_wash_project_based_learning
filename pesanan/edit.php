@@ -58,6 +58,18 @@ $trxBayar = $stmtTrx->fetch();
 $currentStatus = strtolower($pesanan['status']);
 $isLunas       = ($pesanan['status_bayar'] === 'lunas');
 $metodeBayar   = $trxBayar ? strtoupper($trxBayar['jenis_pembayaran']) : 'TUNAI';
+$stmtBatchStatus = $pdo->prepare("
+    SELECT COUNT(*)
+      FROM pesanan
+     WHERE id_pelanggan = :id_pelanggan
+       AND tanggal_pesan = :tanggal_pesan
+       AND status <> 'selesai'
+");
+$stmtBatchStatus->execute([
+    'id_pelanggan' => $pesanan['id_pelanggan'],
+    'tanggal_pesan' => $pesanan['tanggal_pesan'],
+]);
+$semuaBatchSelesai = (int) $stmtBatchStatus->fetchColumn() === 0;
 
 // Alur 4 Tahapan Utama (diterima - diproses - selesai - diambil)
 $flow = [
@@ -426,7 +438,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <?php if (!$isLunas): ?>
+            <?php if (!$isLunas && $semuaBatchSelesai): ?>
                 <form action="<?php echo $base; ?>transaksi/bayar" method="post" style="margin-top: 16px;">
                     <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
                     <input type="hidden" name="id_pesanan" value="<?php echo (int) $pesanan['id_pesanan']; ?>">

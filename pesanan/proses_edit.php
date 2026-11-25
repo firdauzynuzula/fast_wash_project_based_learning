@@ -27,7 +27,7 @@ if ($idPesanan <= 0) {
 }
 
 // Ambil status saat ini
-$stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar FROM pesanan WHERE id_pesanan = :id");
+$stmt = $pdo->prepare("SELECT id_pesanan, kode_pesanan, status, status_bayar, id_pelanggan, tanggal_pesan FROM pesanan WHERE id_pesanan = :id");
 $stmt->execute(['id' => $idPesanan]);
 $pesanan = $stmt->fetch();
 
@@ -71,8 +71,20 @@ if (!$cekKaryawan->fetch()) {
 try {
     $pdo->beginTransaction();
 
-    // Kunci baris supaya dua klik bersamaan tidak melompati tahap
-    $stmt = $pdo->prepare("SELECT status FROM pesanan WHERE id_pesanan = :id FOR UPDATE");
+    // Lock semua pesanan yang dibuat dalam satu batch sebelum memvalidasi pengambilan.
+    $stmtLockGroup = $pdo->prepare("
+        SELECT id_pesanan
+          FROM pesanan
+         WHERE id_pelanggan = :id_pelanggan AND tanggal_pesan = :tanggal_pesan
+         ORDER BY id_pesanan
+         FOR UPDATE
+    ");
+    $stmtLockGroup->execute([
+        'id_pelanggan' => $pesanan['id_pelanggan'],
+        'tanggal_pesan' => $pesanan['tanggal_pesan'],
+    ]);
+
+    $stmt = $pdo->prepare("SELECT status FROM pesanan WHERE id_pesanan = :id");
     $stmt->execute(['id' => $idPesanan]);
     $statusSekarang = $stmt->fetchColumn();
 
@@ -89,6 +101,25 @@ try {
     if ($statusBerikut === null || $statusTujuan !== $statusBerikut) {
         $pdo->rollBack();
         kembaliDetail($idPesanan, 'flash_error', 'Perubahan status tidak valid atau pesanan sudah berubah. Silakan muat ulang halaman.');
+    }
+
+    if ($statusBerikut === 'diambil') {
+        $stmtBelumLunas = $pdo->prepare("
+            SELECT COUNT(*)
+              FROM pesanan
+             WHERE id_pelanggan = :id_pelanggan
+               AND tanggal_pesan = :tanggal_pesan
+               AND status_bayar <> 'lunas'
+        ");
+        $stmtBelumLunas->execute([
+            'id_pelanggan' => $pesanan['id_pelanggan'],
+            'tanggal_pesan' => $pesanan['tanggal_pesan'],
+        ]);
+        if ((int) $stmtBelumLunas->fetchColumn() > 0) {
+            $pdo->rollBack();
+            $_SESSION['flash_popup'] = 'Pesanan belum dibayar, tidak dapat diambil.';
+            kembaliDetail($idPesanan, 'flash_error', 'Pesanan belum dibayar, tidak dapat diambil.');
+        }
     }
 
     $upd = $pdo->prepare("UPDATE pesanan SET status = :status WHERE id_pesanan = :id");

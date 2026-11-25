@@ -175,6 +175,8 @@ require_once __DIR__ . '/../includes/header.php';
     .tb-pill { cursor: pointer; display: block; }
     .tb-pill input { position: absolute; opacity: 0; pointer-events: none; }
     .tb-pill span { display: block; box-sizing: border-box; text-align: center; padding: 10px 0; border-radius: 12px; background: #e8eff8; border: 1.5px solid transparent; font-size: 12px; font-weight: 500; color: #374151; }
+    .tb-pill:has(input:disabled) { cursor: not-allowed; }
+    .tb-pill input:disabled + span { opacity: .5; }
     .tb-pill input:checked + span { background: #fff; border-color: #0085ff; color: #0085ff; }
 
     .tb-btn-lunas { display: block; width: 100%; height: 44px; box-sizing: border-box; margin-top: 22px; border: 1.5px solid #0085ff; border-radius: 24px; background: #fff; color: #0085ff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
@@ -186,6 +188,14 @@ require_once __DIR__ . '/../includes/header.php';
     .tb-alert { margin-bottom: 20px; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; }
     .tb-alert button { background: none; border: 0; color: #ef4444; font-weight: 700; font-size: 18px; cursor: pointer; }
 
+    .notice-overlay { display: none; position: fixed; inset: 0; z-index: 80; background: rgba(15,23,42,.48); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+    .notice-overlay.show { display: flex; }
+    .notice-card { width: 100%; max-width: 400px; padding: 30px 28px 24px; box-sizing: border-box; border-radius: 24px; background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.24); text-align: center; }
+    .notice-icon { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0085ff; background: #eaf5ff; }
+    .notice-title { margin: 0; color: #0a2a5e; font-size: 18px; font-weight: 700; }
+    .notice-message { margin: 9px 0 22px; color: #64748b; font-size: 14px; line-height: 1.6; }
+    .notice-button { min-width: 116px; padding: 11px 22px; border: 0; border-radius: 12px; color: #fff; background: #0085ff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .notice-button:hover { background: #0070d8; }
 
     /* Modal Tambah Pelanggan */
     .pm-overlay { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(15,23,42,.38); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 16px; }
@@ -232,6 +242,17 @@ require_once __DIR__ . '/../includes/header.php';
         <button type="button" onclick="this.parentElement.remove()">&times;</button>
     </div>
 <?php endif; ?>
+
+<div id="modalPeringatanPesanan" class="notice-overlay" role="alertdialog" aria-modal="true" aria-labelledby="judulPeringatanPesanan" aria-describedby="isiPeringatanPesanan" onclick="if (event.target === this) tutupModalPeringatan()">
+    <div class="notice-card">
+        <div class="notice-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+        </div>
+        <h2 id="judulPeringatanPesanan" class="notice-title">Periksa Pesanan</h2>
+        <p id="isiPeringatanPesanan" class="notice-message"></p>
+        <button type="button" class="notice-button" onclick="tutupModalPeringatan()">Mengerti</button>
+    </div>
+</div>
 
 <form id="formPesanan" action="<?php echo $base; ?>pesanan/proses_tambah" method="post" class="tb-grid">
     <input type="hidden" name="csrf" value="<?php echo e(csrf_token()); ?>">
@@ -304,7 +325,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="tb-pills">
                 <?php foreach (['tunai' => 'Tunai', 'qris' => 'QRIS', 'transfer' => 'Transfer'] as $val => $lbl): ?>
                     <label class="tb-pill">
-                        <input type="radio" name="metode_pembayaran" value="<?php echo $val; ?>" data-metode="<?php echo $lbl; ?>">
+                        <input type="radio" name="metode_pembayaran" value="<?php echo $val; ?>" data-metode="<?php echo $lbl; ?>" disabled>
                         <span><?php echo $lbl; ?></span>
                     </label>
                 <?php endforeach; ?>
@@ -382,6 +403,15 @@ function namaPelanggan() {
     return (opt && opt.value) ? (opt.getAttribute('data-nama') || '') : '';
 }
 
+function bukaModalPeringatan(pesan) {
+    document.getElementById('isiPeringatanPesanan').textContent = pesan;
+    document.getElementById('modalPeringatanPesanan').classList.add('show');
+    document.querySelector('#modalPeringatanPesanan .notice-button').focus();
+}
+function tutupModalPeringatan() {
+    document.getElementById('modalPeringatanPesanan').classList.remove('show');
+}
+
 /* ---------- Tambah kartu pesanan (ke bawah) ---------- */
 function tambahPesanan() {
     const html = document.getElementById('tplOrder').innerHTML.replaceAll('__I__', jumlahPesanan);
@@ -445,8 +475,12 @@ function hitungRingkasan() {
         }
     });
 
-    const metode = document.querySelector('input[name="metode_pembayaran"]:checked');
     const status = document.getElementById('inputStatusBayar').value;
+    document.querySelectorAll('input[name="metode_pembayaran"]').forEach(radio => {
+        radio.disabled = status !== 'lunas';
+        if (radio.disabled) radio.checked = false;
+    });
+    const metode = document.querySelector('input[name="metode_pembayaran"]:checked');
     const siap   = adaLayanan ? (maxJam < 24 ? `dalam ${maxJam} jam` : `dalam ${Math.ceil(maxJam / 24)} hari`) : '';
 
     if (cards.length > 1) html += '<hr class="tb-sep">';
@@ -533,7 +567,10 @@ async function simpanPelanggan() {
 }
 
 document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') tutupModalPelanggan();
+    if (e.key === 'Escape') {
+        tutupModalPelanggan();
+        tutupModalPeringatan();
+    }
     if (e.key === 'Enter' && document.getElementById('modalPelanggan').classList.contains('show')) {
         e.preventDefault();
         simpanPelanggan();
@@ -546,21 +583,31 @@ document.getElementById('formPesanan').addEventListener('change', hitungRingkasa
 document.getElementById('formPesanan').addEventListener('submit', function (e) {
     if (!namaPelanggan()) {
         e.preventDefault();
-        alert('Silakan pilih pelanggan atau tambah pelanggan baru.');
+        bukaModalPeringatan('Silakan masukan data pelanggan.');
         return;
     }
     const kosong = [...document.querySelectorAll('[data-order]')].some(c => !c.querySelector('input[data-harga]:checked'));
     if (kosong) {
         e.preventDefault();
-        alert('Silakan pilih layanan pada setiap pesanan.');
+        bukaModalPeringatan('Silakan pilih layanan pada setiap pesanan.');
         return;
     }
     const beratKosong = [...document.querySelectorAll('.berat-input')].some(i => !(parseFloat(i.value) > 0));
     if (beratKosong) {
         e.preventDefault();
-        alert('Berat cucian harus lebih dari 0 kg.');
+        bukaModalPeringatan('Berat cucian harus lebih dari 0 kg.');
+        return;
+    }
+    if (document.getElementById('inputStatusBayar').value === 'lunas'
+        && !document.querySelector('input[name="metode_pembayaran"]:checked')) {
+        e.preventDefault();
+        bukaModalPeringatan('Silakan pilih metode pembayaran.');
     }
 });
+
+<?php if ($flashError): ?>
+    bukaModalPeringatan(<?php echo json_encode($flashError); ?>);
+<?php endif; ?>
 
 hitungRingkasan();
 </script>
